@@ -2,6 +2,8 @@
 
 A Chrome extension that helps improve the tone, clarity, and politeness of your messages using OpenAI's GPT-4o API. Perfect for enhancing your Slack, Teams, or email communications.
 
+![image](https://github.com/user-attachments/assets/61e49ef4-f57e-436d-9643-76e071bee39d)
+
 ## Features
 
 ### Message Enhancement
