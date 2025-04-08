@@ -10,54 +10,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
 });
 
-async function detectLanguage(text, apiKey) {
-  try {
-    const response = await fetch(OPENAI_API_ENDPOINT, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: MODEL,
-        messages: [
-          {
-            role: "system",
-            content:
-              'You are a language detector. Respond with only the ISO language code: "en" for English, "pt" for Portuguese, etc.',
-          },
-          {
-            role: "user",
-            content: `Detect the language of this text: "${text}"`,
-          },
-        ],
-        temperature: 0.1,
-        max_tokens: 10,
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error("Failed to detect language");
-    }
-
-    const data = await response.json();
-    return data.choices[0].message.content.trim().toLowerCase();
-  } catch (error) {
-    console.error("Language detection error:", error);
-    return "en";
-  }
-}
-
-async function enhanceText({ text, tone, type }) {
+async function enhanceText({ text, tone, translate, type }) {
   const { openaiApiKey } = await chrome.storage.sync.get(["openaiApiKey"]);
 
   if (!openaiApiKey) {
     throw new Error("OpenAI API key not found. Please set it in the extension settings.");
   }
 
-  const language = await detectLanguage(text, openaiApiKey);
-
-  const systemMessage = constructSystemMessage(tone, type, language);
+  const systemMessage = constructSystemMessage(tone, type, translate);
 
   try {
     const response = await fetch(OPENAI_API_ENDPOINT, {
@@ -98,78 +58,53 @@ async function enhanceText({ text, tone, type }) {
   }
 }
 
-function constructSystemMessage(tone, type, language) {
-  const messages = {
-    en: {
-      base: "You are a professional message enhancer. Your task is to improve the given text by:",
-      clarity: "\n1. Enhancing clarity and readability",
-      grammar: "\n2. Fixing grammar and punctuation",
-      meaning: "\n3. Maintaining the original meaning",
-      tones: {
-        "very-informal": [
-          "\n4. Making the tone very casual and friendly",
-          "\n5. Using conversational language and common expressions",
-        ],
-        informal: ["\n4. Keeping a relaxed but professional tone", "\n5. Using friendly but appropriate language"],
-        neutral: ["\n4. Maintaining a balanced and professional tone", "\n5. Using clear and straightforward language"],
-        formal: [
-          "\n4. Using formal and professional language",
-          "\n5. Maintaining a respectful and business-appropriate tone",
-        ],
-      },
-      email: {
-        base: "\n\nThis is an email message. Ensure it follows proper email etiquette and structure.",
-        formal:
-          " While maintaining the requested tone, add a slight level of formality appropriate for email communication.",
-      },
-      final: "\n\nProvide only the enhanced text without any explanations or additional comments.",
+function constructSystemMessage(tone, type, shouldTranslate) {
+  const translate = shouldTranslate
+    ? "Translating the text to English while preserving its original meaning and intent"
+    : "Do not translate the content/text, keep it in its original language";
+
+  const message = {
+    base: "You are a professional message enhancer. Your task is to improve the given text by:",
+    clarity: "\n1. Enhancing clarity and readability",
+    grammar: "\n2. Fixing grammar and punctuation",
+    meaning: "\n3. Maintaining the original meaning",
+    translate: `\n3. ${translate}`,
+    tones: {
+      "very-informal": [
+        "\n4. Making the tone very casual and friendly",
+        "\n5. Using conversational language and common expressions",
+        "\n6. Be informal",
+      ],
+      informal: ["\n4. Keeping a relaxed but professional tone", "\n5. Using friendly but appropriate language", "Don't be formal"],
+      neutral: [
+        "\n4. Maintaining a balanced and professional tone, but not too formal",
+        "\n5. Using clear and straightforward language",
+      ],
+      formal: [
+        "\n4. Using formal and professional language",
+        "\n5. Maintaining a respectful and business-appropriate tone",
+      ],
     },
-    pt: {
-      base: "Você é um aprimorador profissional de mensagens. Sua tarefa é melhorar o texto fornecido:",
-      clarity: "\n1. Melhorando a clareza e legibilidade",
-      grammar: "\n2. Corrigindo gramática e pontuação",
-      meaning: "\n3. Mantendo o significado original",
-      tones: {
-        "very-informal": [
-          "\n4. Tornando o tom bem casual e amigável",
-          "\n5. Usando linguagem coloquial e expressões comuns",
-        ],
-        informal: [
-          "\n4. Mantendo um tom descontraído mas profissional",
-          "\n5. Usando linguagem amigável mas apropriada",
-        ],
-        neutral: ["\n4. Mantendo um tom equilibrado e profissional", "\n5. Usando linguagem clara e direta"],
-        formal: [
-          "\n4. Usando linguagem formal e profissional",
-          "\n5. Mantendo um tom respeitoso e apropriado para negócios",
-        ],
-      },
-      email: {
-        base: "\n\nEste é um email. Certifique-se de seguir a etiqueta e estrutura apropriada para emails.",
-        formal: " Mantendo o tom solicitado, adicione um nível de formalidade apropriado para comunicação por email.",
-      },
-      final: "\n\nForneça apenas o texto aprimorado sem explicações ou comentários adicionais.",
+    email: {
+      base: "\n\nThis is an email message. Ensure it follows proper email etiquette and structure. But keep it informal and friendly.",
     },
+    final: "\n\nProvide only the enhanced text without any explanations or additional comments.",
   };
 
-  const langMessages = messages[language] || messages.en;
-  let message = langMessages.base;
-  message += langMessages.clarity;
-  message += langMessages.grammar;
-  message += langMessages.meaning;
+  let messages = message.base;
+  messages += message.clarity;
+  messages += message.grammar;
+  messages += message.meaning;
+  messages += message.translate;
 
-  const toneInstructions = langMessages.tones[tone];
+  const toneInstructions = message.tones[tone];
   if (toneInstructions) {
-    message += toneInstructions.join("");
+    messages += toneInstructions.join("");
   }
 
-  if (type === "email") {
-    message += langMessages.email.base;
-    if (tone !== "formal") {
-      message += langMessages.email.formal;
-    }
-  }
+  if (type === "email") messages += message.email.base;
+  else messages += "This is not an email message, it's a message in a chat/group chat";
 
-  message += langMessages.final;
-  return message;
+  messages += message.final;
+  return messages;
 }
