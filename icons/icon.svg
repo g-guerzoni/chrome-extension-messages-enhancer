@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Background circle -->
+    <circle cx="64" cy="64" r="60" fill="#4F46E5"/>
+    
+    <!-- Message bubble -->
+    <path d="M38 42H90C93.3137 42 96 44.6863 96 48V80C96 83.3137 93.3137 86 90 86H70L64 92L58 86H38C34.6863 86 32 83.3137 32 80V48C32 44.6863 34.6863 42 38 42Z" fill="white"/>
+    
+    <!-- Enhancement lines -->
+    <line x1="44" y1="56" x2="84" y2="56" stroke="#4F46E5" stroke-width="4" stroke-linecap="round"/>
+    <line x1="44" y1="64" x2="74" y2="64" stroke="#4F46E5" stroke-width="4" stroke-linecap="round"/>
+    <line x1="44" y1="72" x2="64" y2="72" stroke="#4F46E5" stroke-width="4" stroke-linecap="round"/>
+</svg> 

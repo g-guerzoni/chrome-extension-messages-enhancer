@@ -1,0 +1,12 @@
+{
+  "name": "chrome-extension-messages-enhancer",
+  "version": "1.0.0",
+  "description": "A Chrome extension that enhances message tone and clarity using GPT-4",
+  "private": true,
+  "scripts": {
+    "generate-icons": "node generate-icons.js"
+  },
+  "devDependencies": {
+    "sharp": "^0.33.2"
+  }
+} 

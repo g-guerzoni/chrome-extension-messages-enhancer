@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Message Enhancer</title>
+    <link rel="stylesheet" href="popup.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Message Enhancer</h1>
+            <button id="settings-btn" class="icon-button" title="Settings">
+                <span class="material-icons">settings</span>
+            </button>
+        </header>
+
+        <main>
+            <div class="input-section">
+                <label for="input-text">Original Text</label>
+                <textarea 
+                    id="input-text" 
+                    placeholder="Enter your message here (max 1000 characters)"
+                    maxlength="1000"
+                ></textarea>
+                <div class="char-count">
+                    <span id="char-count">0</span>/1000
+                </div>
+            </div>
+
+            <div class="options-section">
+                <div class="tone-selection">
+                    <h3>Tone</h3>
+                    <div class="radio-group">
+                        <label>
+                            <input type="radio" name="tone" value="very-informal">
+                            Very Informal
+                        </label>
+                        <label>
+                            <input type="radio" name="tone" value="informal" checked>
+                            Informal
+                        </label>
+                        <label>
+                            <input type="radio" name="tone" value="neutral">
+                            Neutral
+                        </label>
+                        <label>
+                            <input type="radio" name="tone" value="formal">
+                            Formal
+                        </label>
+                    </div>
+                </div>
+
+                <div class="message-type">
+                    <h3>Message Type</h3>
+                    <div class="radio-group">
+                        <label>
+                            <input type="radio" name="type" value="message" checked>
+                            Message
+                        </label>
+                        <label>
+                            <input type="radio" name="type" value="email">
+                            Email
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <button id="enhance-btn" class="primary-button">
+                <span class="button-text">Enhance Message</span>
+                <div class="loading-spinner"></div>
+            </button>
+
+            <div class="output-section">
+                <div class="output-header">
+                    <label for="output-text">Enhanced Text</label>
+                    <button id="copy-btn" class="icon-button" title="Copy to Clipboard">
+                        <span class="material-icons">content_copy</span>
+                    </button>
+                </div>
+                <textarea id="output-text" readonly></textarea>
+            </div>
+        </main>
+    </div>
+    <script src="popup.js" type="module"></script>
+</body>
+</html> 
