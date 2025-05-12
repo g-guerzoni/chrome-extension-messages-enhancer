@@ -10,19 +10,6 @@ enhanceBtn.addEventListener("click", enhanceText);
 copyBtn.addEventListener("click", copyToClipboard);
 settingsBtn.addEventListener("click", openSettings);
 
-document.querySelectorAll('input[name="type"]').forEach((radio) => {
-  radio.addEventListener("change", (e) => {
-    const messageType = e.target.value;
-    const currentTone = document.querySelector('input[name="tone"]:checked').value;
-
-    if (messageType === "email" && currentTone !== "formal") {
-      document.querySelector('input[name="tone"][value="neutral"]').checked = true;
-    } else if (messageType === "message" && currentTone !== "formal") {
-      document.querySelector('input[name="tone"][value="informal"]').checked = true;
-    }
-  });
-});
-
 function updateCharCount() {
   const count = inputText.value.length;
   charCount.textContent = count;

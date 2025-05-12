@@ -59,52 +59,68 @@ async function enhanceText({ text, tone, translate, type }) {
 }
 
 function constructSystemMessage(tone, type, shouldTranslate) {
-  const translate = shouldTranslate
-    ? "Translating the text to English while preserving its original meaning and intent"
-    : "Do not translate the content/text, keep it in its original language";
+  let textLanguage = "Keep the text in its original language. Improve readability and clarity for speakers of that language.";
 
-  const message = {
-    base: "You are a professional message enhancer. Your task is to improve the given text by:",
-    clarity: "\n1. Enhancing clarity and readability",
-    grammar: "\n2. Fixing grammar and punctuation",
-    meaning: "\n3. Maintaining the original meaning",
-    translate: `\n3. ${translate}`,
-    tones: {
-      "very-informal": [
-        "\n4. Making the tone very casual and friendly",
-        "\n5. Using conversational language and common expressions",
-        "\n6. Be informal",
-      ],
-      informal: ["\n4. Keeping a relaxed but professional tone", "\n5. Using friendly but appropriate language", "Don't be formal"],
-      neutral: [
-        "\n4. Maintaining a balanced and professional tone, but not too formal",
-        "\n5. Using clear and straightforward language",
-      ],
-      formal: [
-        "\n4. Using formal and professional language",
-        "\n5. Maintaining a respectful and business-appropriate tone",
-      ],
-    },
-    email: {
-      base: "\n\nThis is an email message. Ensure it follows proper email etiquette and structure. But keep it informal and friendly.",
-    },
-    final: "\n\nProvide only the enhanced text without any explanations or additional comments.",
-  };
-
-  let messages = message.base;
-  messages += message.clarity;
-  messages += message.grammar;
-  messages += message.meaning;
-  messages += message.translate;
-
-  const toneInstructions = message.tones[tone];
-  if (toneInstructions) {
-    messages += toneInstructions.join("");
+  if (shouldTranslate) {
+    textLanguage = "Translate the text to English while preserving its original meaning. Make it readable and understandable for an English audience.";
   }
 
-  if (type === "email") messages += message.email.base;
-  else messages += "This is not an email message, it's a message in a chat/group chat";
+  const instructions = {
+    base: ["You are a professional message enhancer. Your task is to improve the given text by:"],
+    core: [
+      "Enhancing clarity and readability",
+      "Fixing grammar, punctuation, and other errors",
+      "Maintaining the original meaning and intent",
+      "If the original text is good enough, just fix typos and return as it is",
+      "Do not introduce advice, recommendations, or implied intent not present in the original text",
+      "Do not rephrase statements as directives, suggestions, or conclusions unless those were present in the original",
+      "When referencing external sources, report exactly what is stated without summarizing as advice or a rule, unless explicitly stated as such in the original",
+      "Preserve both the explicit and implicit meaning, avoiding reinterpretation or additional assumptions"
+    ],
+    formatting: [
+      "If the original text DOES NOT include a greeting (like 'hey there', 'hi', 'hello') or phrases like 'just a heads up', DO NOT add one",
+      "Preserve the original level of brevity and formality",
+      "Avoid adding greetings or context that weren't originally present"
+    ],
+    avoidance: [
+      "Avoid emojis, hashtags, and other non-textual elements",
+      "Avoid excessive wordiness",
+      "Avoid americanisms, slang, abbreviations, and acronyms",
+      "Avoid idioms, metaphors, similes, hyperboles, and expressions",
+      "Do not convert existing acronyms to full words",
+      "Do not use 'Just a heads up', 'Just to clarify' or similar phrases, unless the original text includes them"
+    ],
+    translation: [textLanguage],
+    tones: {
+      neutral: [
+        "Make the tone casual and friendly",
+        "Use conversational language and common expressions",
+        "Be informal"
+      ],
+      formal: [
+        "Keep the tone professional and respectful",
+        "Use more precise language and clearer structure",
+        "Maintain appropriate formality",
+        "Avoid contractions and casual phrases"
+      ],
+    },
+    messageTypes: {
+      email: ["This is an email message. Ensure it follows proper email etiquette and structure while maintaining appropriate tone."],
+      message: ["This is a text meant to be sent in group chats, social media, kanban boards, etc. Format it appropriately for this context."]
+    },
+    final: ["Provide ONLY the enhanced text without any explanations or additional comments."]
+  };
 
-  messages += message.final;
-  return messages;
+  const messageComponents = [
+    ...instructions.base,
+    ...instructions.core.map(item => `- ${item}`),
+    ...instructions.formatting.map(item => `- ${item}`),
+    ...instructions.avoidance.map(item => `- ${item}`),
+    ...instructions.translation.map(item => `- ${item}`),
+    ...(instructions.tones[tone] || instructions.tones.neutral).map(item => `- ${item}`),
+    ...instructions.messageTypes[type === "email" ? "email" : "message"],
+    ...instructions.final
+  ];
+
+  return messageComponents.join("\n");
 }

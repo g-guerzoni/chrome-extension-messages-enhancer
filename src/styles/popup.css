@@ -168,10 +168,6 @@ textarea:focus {
   accent-color: var(--primary-color);
 }
 
-.translate-option {
-  margin-bottom: 1rem;
-}
-
 button {
   font-size: 0.875rem;
   font-weight: 500;
