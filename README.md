@@ -1,13 +1,13 @@
 # Message Enhancer Chrome Extension
 
-A Chrome extension that helps improve the tone, clarity, and politeness of your messages using OpenAI's GPT-4o API. Perfect for enhancing your Slack, Teams, or email communications.
+A Chrome extension that helps improve the tone, clarity, and politeness of your messages using OpenAI's GPT-4o mini API. Perfect for enhancing your Slack, Teams, or email communications.
 
 ![image](https://github.com/user-attachments/assets/61e49ef4-f57e-436d-9643-76e071bee39d)
 
 ## Features
 
 ### Message Enhancement
-- Improve text clarity and readability using GPT-4
+- Improve text clarity and readability using GPT-4o mini
 - Fix grammar and punctuation
 - Maintain original meaning while enhancing expression
 - Support for messages up to 1000 characters
@@ -114,7 +114,7 @@ The extension is built with vanilla JavaScript and follows a modular structure:
 ## Requirements
 
 - Chrome browser
-- OpenAI API key with access to GPT-4
+- OpenAI API key with access to GPT-4o mini
 - Node.js and npm (for development)
 
 ## License
