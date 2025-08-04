@@ -8,6 +8,24 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       .catch((error) => sendResponse({ error: error.message }));
     return true;
   }
+  
+  if (request.action === "openPopupWithText") {
+    // Store the text temporarily for the popup to retrieve and auto-enhance
+    chrome.storage.local.set({ 
+      pendingText: request.text,
+      pendingTimestamp: Date.now(),
+      autoEnhance: true // Flag to trigger automatic enhancement
+    }, () => {
+      // Open the popup
+      chrome.action.openPopup().then(() => {
+        sendResponse({ success: true });
+      }).catch((error) => {
+        console.error("Failed to open popup:", error);
+        sendResponse({ success: false, error: error.message });
+      });
+    });
+    return true;
+  }
 });
 
 async function enhanceText({ text, tone, translate, type }) {

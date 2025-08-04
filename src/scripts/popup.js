@@ -37,6 +37,7 @@ function updateCharCount() {
   }
 }
 
+
 async function enhanceText() {
   const text = inputText.value.trim();
 
@@ -167,6 +168,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   checkApiKeyAndUpdateUI();
   loadPersistedText();
+  checkForPendingText();
 });
 
 function saveTextToStorage() {
@@ -189,4 +191,53 @@ function loadPersistedText() {
       copyBtn.disabled = !outputText.value;
     }
   });
+}
+
+function checkForPendingText() {
+  chrome.storage.local.get(["pendingText", "pendingTimestamp", "autoEnhance"], (result) => {
+    if (result.pendingText && result.pendingTimestamp) {
+      // Check if the pending text is recent (within 10 seconds)
+      const isRecent = (Date.now() - result.pendingTimestamp) < 10000;
+      
+      if (isRecent) {
+        // Pre-fill the input with the pending text
+        inputText.value = result.pendingText;
+        outputText.value = ""; // Clear output
+        updateCharCount();
+        copyBtn.disabled = true;
+        
+        // Show visual feedback that text was auto-filled
+        showAutoFillFeedback();
+        
+        // Auto-enhance if requested from content script
+        if (result.autoEnhance) {
+          setTimeout(() => {
+            enhanceText(); // Trigger enhancement automatically
+          }, 500); // Small delay to ensure UI is updated
+        }
+        
+        // Clear the pending text and flags
+        chrome.storage.local.remove(["pendingText", "pendingTimestamp", "autoEnhance"]);
+      } else {
+        // Clean up old pending text
+        chrome.storage.local.remove(["pendingText", "pendingTimestamp", "autoEnhance"]);
+      }
+    }
+  });
+}
+
+function showAutoFillFeedback() {
+  // Brief visual indication that text was auto-filled from website
+  const originalBorderColor = inputText.style.borderColor;
+  inputText.style.borderColor = '#10b981';
+  inputText.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)';
+  
+  // Focus the input to draw attention
+  inputText.focus();
+  
+  // Reset after 2 seconds
+  setTimeout(() => {
+    inputText.style.borderColor = originalBorderColor;
+    inputText.style.boxShadow = '';
+  }, 2000);
 }
