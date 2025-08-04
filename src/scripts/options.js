@@ -1,11 +1,12 @@
 const apiKeyInput = document.getElementById("api-key");
 const themeSelect = document.getElementById("theme");
 const keepTextCheckbox = document.getElementById("keep-text");
+const contentScriptCheckbox = document.getElementById("content-script");
 const saveButton = document.getElementById("save-btn");
 const statusDiv = document.getElementById("status");
 const togglePasswordBtn = document.querySelector(".toggle-password");
 
-chrome.storage.sync.get(["openaiApiKey", "theme", "keepTextOnClose"], (result) => {
+chrome.storage.sync.get(["openaiApiKey", "theme", "keepTextOnClose", "enableContentScript"], (result) => {
   if (result.openaiApiKey) {
     apiKeyInput.value = result.openaiApiKey;
   }
@@ -21,12 +22,18 @@ chrome.storage.sync.get(["openaiApiKey", "theme", "keepTextOnClose"], (result) =
   } else {
     keepTextCheckbox.checked = true;
   }
+  if (result.enableContentScript !== undefined) {
+    contentScriptCheckbox.checked = result.enableContentScript;
+  } else {
+    contentScriptCheckbox.checked = true;
+  }
 });
 
 saveButton.addEventListener("click", () => {
   const apiKey = apiKeyInput.value.trim();
   const theme = themeSelect.value;
   const keepTextOnClose = keepTextCheckbox.checked;
+  const enableContentScript = contentScriptCheckbox.checked;
 
   if (!apiKey) {
     showStatus("Please enter an API key", "error");
@@ -42,6 +49,7 @@ saveButton.addEventListener("click", () => {
     openaiApiKey: apiKey,
     theme: theme,
     keepTextOnClose: keepTextOnClose,
+    enableContentScript: enableContentScript,
   };
 
   if (!keepTextOnClose) {

@@ -2,8 +2,8 @@
   "manifest_version": 3,
   "name": "Message Enhancer",
   "description": "Enhance your Slack/Teams messages with improved tone, clarity, and politeness using GPT-4.1 Nano",
-  "version": "1.1.0",
-  "permissions": ["storage"],
+  "version": "2.0.0",
+  "permissions": ["storage", "activeTab"],
   "action": {
     "default_popup": "src/interface/popup.html",
     "default_icon": {
@@ -21,5 +21,13 @@
   "background": {
     "service_worker": "src/scripts/background.js",
     "type": "module"
-  }
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["src/scripts/content.js"],
+      "css": ["src/styles/content.css"],
+      "run_at": "document_end"
+    }
+  ]
 }
