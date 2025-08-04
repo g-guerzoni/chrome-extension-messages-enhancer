@@ -2,11 +2,12 @@ const apiKeyInput = document.getElementById("api-key");
 const themeSelect = document.getElementById("theme");
 const keepTextCheckbox = document.getElementById("keep-text");
 const contentScriptCheckbox = document.getElementById("content-script");
+const blockedDomainsTextarea = document.getElementById("blocked-domains");
 const saveButton = document.getElementById("save-btn");
 const statusDiv = document.getElementById("status");
 const togglePasswordBtn = document.querySelector(".toggle-password");
 
-chrome.storage.sync.get(["openaiApiKey", "theme", "keepTextOnClose", "enableContentScript"], (result) => {
+chrome.storage.sync.get(["openaiApiKey", "theme", "keepTextOnClose", "enableContentScript", "blockedDomains"], (result) => {
   if (result.openaiApiKey) {
     apiKeyInput.value = result.openaiApiKey;
   }
@@ -27,13 +28,40 @@ chrome.storage.sync.get(["openaiApiKey", "theme", "keepTextOnClose", "enableCont
   } else {
     contentScriptCheckbox.checked = true;
   }
+  if (result.blockedDomains) {
+    blockedDomainsTextarea.value = result.blockedDomains;
+  }
 });
+
+function validateDomains(domainsString) {
+  if (!domainsString.trim()) return { valid: true, domains: [] };
+  
+  const domains = domainsString.split(",").map(d => d.trim()).filter(d => d);
+  const validDomains = [];
+  const errors = [];
+  
+  domains.forEach(domain => {
+    if (domain.includes("://")) {
+      errors.push(`"${domain}" - Remove protocol (http:// or https://)`);
+      return;
+    }
+    
+    if (domain.match(/^[a-zA-Z0-9]([a-zA-Z0-9\-\.\/]*[a-zA-Z0-9\/])?$/)) {
+      validDomains.push(domain);
+    } else {
+      errors.push(`"${domain}" - Invalid domain format`);
+    }
+  });
+  
+  return { valid: errors.length === 0, domains: validDomains, errors };
+}
 
 saveButton.addEventListener("click", () => {
   const apiKey = apiKeyInput.value.trim();
   const theme = themeSelect.value;
   const keepTextOnClose = keepTextCheckbox.checked;
   const enableContentScript = contentScriptCheckbox.checked;
+  const blockedDomainsString = blockedDomainsTextarea.value.trim();
 
   if (!apiKey) {
     showStatus("Please enter an API key", "error");
@@ -45,11 +73,18 @@ saveButton.addEventListener("click", () => {
     return;
   }
 
+  const domainValidation = validateDomains(blockedDomainsString);
+  if (!domainValidation.valid) {
+    showStatus("Invalid domain format: " + domainValidation.errors.join(", "), "error");
+    return;
+  }
+
   const settingsToSave = {
     openaiApiKey: apiKey,
     theme: theme,
     keepTextOnClose: keepTextOnClose,
     enableContentScript: enableContentScript,
+    blockedDomains: blockedDomainsString,
   };
 
   if (!keepTextOnClose) {

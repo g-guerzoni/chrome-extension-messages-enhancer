@@ -5,6 +5,8 @@
   'use strict';
 
   console.log('Message Enhancer: Content script loaded on', window.location.href);
+  console.log('Message Enhancer: Current hostname:', window.location.hostname);
+  console.log('Message Enhancer: Current pathname:', window.location.pathname);
 
   // Early safety checks
   if (window.location.protocol.startsWith('chrome')) {
@@ -25,17 +27,57 @@
   }
 
   let isEnabled = false;
+  let blockedDomains = []; // Cache for parsed blocked domains
   const processedInputs = new WeakSet();
   const inputTimeouts = new Map(); // Track timeouts for each input
   const inputIconMap = new Map(); // Map inputs to their icons
   let currentFocusedInput = null; // Track currently focused input
 
+  // Parse blocked domains from settings string
+  function parseBlockedDomains(domainsString) {
+    if (!domainsString || !domainsString.trim()) return [];
+    
+    return domainsString.split(",")
+      .map(d => d.trim())
+      .filter(d => d)
+      .map(domain => {
+        // Remove protocol if accidentally included
+        if (domain.includes("://")) {
+          domain = domain.split("://")[1];
+        }
+        return domain.toLowerCase();
+      });
+  }
+
+  // Check if current URL matches any blocked domain
+  function isCurrentUrlBlocked() {
+    if (!blockedDomains.length) return false;
+    
+    const currentHost = window.location.hostname.toLowerCase();
+    const currentPath = window.location.pathname;
+    const currentUrl = currentHost + currentPath;
+    
+    return blockedDomains.some(blocked => {
+      // If blocked domain contains path, match exact URL
+      if (blocked.includes("/")) {
+        return currentUrl.startsWith(blocked) || currentUrl === blocked;
+      }
+      // Otherwise match domain (including subdomains)
+      return currentHost === blocked || currentHost.endsWith("." + blocked);
+    });
+  }
+
   // Check if we should run on this site
   function shouldRun() {
     const hostname = window.location.hostname.toLowerCase();
     const blockedPatterns = ['bank', 'paypal', 'secure', 'login', 'auth', 'admin'];
-    const shouldRun = !blockedPatterns.some(pattern => hostname.includes(pattern));
-    console.log('Message Enhancer: Should run on', hostname, '?', shouldRun);
+    const shouldRunBasic = !blockedPatterns.some(pattern => hostname.includes(pattern));
+    
+    // Check if URL is in user's blocked domains
+    const isBlocked = isCurrentUrlBlocked();
+    
+    const shouldRun = shouldRunBasic && !isBlocked;
+    console.log('Message Enhancer: Should run on', hostname, '?', shouldRun, '(blocked by user:', isBlocked, ')');
     return shouldRun;
   }
 
@@ -262,6 +304,10 @@
   // Find and process inputs
   function findInputs() {
     if (!isEnabled) return;
+    if (!shouldRun()) {
+      console.log('Message Enhancer: Skipping input processing - shouldRun() returned false');
+      return;
+    }
     
     const selectors = 'textarea, input[type="text"], input[type="email"], input:not([type]), [contenteditable="true"]';
     const inputs = document.querySelectorAll(selectors);
@@ -329,7 +375,6 @@
 
   // Initialize
   function init() {
-    if (!shouldRun()) return;
     
     // Check if extension context is valid
     if (!chrome.runtime?.id) {
@@ -339,14 +384,25 @@
     
     // Check if enabled (default true if not set)
     try {
-      chrome.storage.sync.get(['enableContentScript'], (result) => {
+      chrome.storage.sync.get(['enableContentScript', 'blockedDomains'], (result) => {
         if (chrome.runtime.lastError) {
           console.log('Message Enhancer: Storage access failed:', chrome.runtime.lastError);
           return;
         }
         
         isEnabled = result.enableContentScript !== false; // Enabled by default
+        blockedDomains = parseBlockedDomains(result.blockedDomains || '');
         console.log('Message Enhancer: Content script enabled:', isEnabled);
+        console.log('Message Enhancer: Raw blocked domains string:', result.blockedDomains);
+        console.log('Message Enhancer: Parsed blocked domains:', blockedDomains);
+        console.log('Message Enhancer: Current URL blocked?', isCurrentUrlBlocked());
+        
+        // Check if we should run on this site AFTER loading settings
+        if (!shouldRun()) {
+          console.log('Message Enhancer: Not running on this site due to blocking rules');
+          return;
+        }
+        
         if (isEnabled) {
           findInputs();
           
@@ -398,6 +454,27 @@
             icons.forEach(icon => icon.remove());
           }
         }
+        
+        if (changes.blockedDomains) {
+          blockedDomains = parseBlockedDomains(changes.blockedDomains.newValue || '');
+          console.log('Message Enhancer: Updated blocked domains:', blockedDomains);
+          
+          // If current site is now blocked, remove all icons
+          if (isCurrentUrlBlocked()) {
+            inputTimeouts.forEach(timeoutId => clearTimeout(timeoutId));
+            inputTimeouts.clear();
+            inputIconMap.clear();
+            currentFocusedInput = null;
+            
+            const icons = document.querySelectorAll('.message-enhancer-icon, [title*="Message Enhancer"]');
+            icons.forEach(icon => icon.remove());
+            console.log('Message Enhancer: Site is now blocked, removed all icons');
+          } else if (isEnabled) {
+            // Site is no longer blocked, re-scan for inputs
+            findInputs();
+            console.log('Message Enhancer: Site is no longer blocked, re-scanning inputs');
+          }
+        }
       });
     } catch (error) {
       console.log('Message Enhancer: Error during initialization:', error);
@@ -408,8 +485,10 @@
   window.debugMessageEnhancer = function() {
     console.log('Message Enhancer Debug Info:');
     console.log('- Enabled:', isEnabled);
-    console.log('- Processed inputs:', processedInputs);
+    console.log('- Blocked domains:', blockedDomains);
+    console.log('- Current URL blocked?', isCurrentUrlBlocked());
     console.log('- Should run:', shouldRun());
+    console.log('- Processed inputs:', processedInputs);
     console.log('- Current focused input:', currentFocusedInput);
     console.log('- Active timeouts:', inputTimeouts.size);
     

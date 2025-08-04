@@ -32,7 +32,8 @@ label {
 
 input[type="text"],
 input[type="password"],
-select {
+select,
+textarea {
     width: 100%;
     padding: 0.5rem 0.75rem;
     border: 1px solid var(--border-color);
@@ -40,11 +41,18 @@ select {
     font-size: 0.875rem;
     background-color: var(--input-background);
     color: var(--text-color);
+    font-family: inherit;
+}
+
+textarea {
+    resize: vertical;
+    min-height: 4rem;
 }
 
 input[type="text"]:focus,
 input[type="password"]:focus,
-select:focus {
+select:focus,
+textarea:focus {
     outline: none;
     border-color: var(--primary-color);
     box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
@@ -106,4 +114,52 @@ button:hover {
     display: block;
     background-color: rgba(239, 68, 68, 0.1);
     color: var(--error-color);
+}
+
+.help-text {
+    margin-top: 0.25rem;
+    font-size: 0.75rem;
+    color: var(--secondary-text);
+    line-height: 1.4;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: flex-start;
+    cursor: pointer;
+    font-weight: normal;
+    margin-bottom: 0;
+}
+
+.checkbox-label input[type="checkbox"] {
+    display: none;
+}
+
+.checkmark {
+    width: 1rem;
+    height: 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.25rem;
+    margin-right: 0.5rem;
+    margin-top: 0.125rem;
+    flex-shrink: 0;
+    position: relative;
+    background-color: var(--input-background);
+    transition: all 0.2s;
+}
+
+.checkbox-label input[type="checkbox"]:checked + .checkmark {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.checkbox-label input[type="checkbox"]:checked + .checkmark::after {
+    content: "✓";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 0.75rem;
+    line-height: 1;
 } 

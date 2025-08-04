@@ -53,6 +53,16 @@
         <p class="help-text">When enabled, ✨ icons will appear in text inputs on websites like Gmail, Slack, Teams, etc. Click the icon to open the extension with your text pre-filled.</p>
     </div>
 
+    <div class="form-group">
+        <label for="blocked-domains">Blocked Domains</label>
+        <textarea 
+            id="blocked-domains" 
+            placeholder="Enter domains to block, separated by commas (e.g., github.com, twitter.com/compose, facebook.com)"
+            rows="3"
+        ></textarea>
+        <p class="help-text">Enhancement icons will be hidden on these domains. Use full domains (github.com) to block entire sites, or include paths (github.com/user/repo) to block specific pages only.</p>
+    </div>
+
     <button id="save-btn">Save Settings</button>
     
     <div id="status" class="status"></div>

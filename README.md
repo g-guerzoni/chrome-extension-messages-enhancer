@@ -105,6 +105,7 @@ your text pre-filled and automatically enhanced
 - **Theme Selection**: Choose between System, Light, or Dark mode
 - **Keep Text on Close**: Automatically save and restore your text between sessions
 - **Website Integration**: Enable or disable the Grammarly-style icons on websites
+- **Domain Blocking**: Block enhancement icons on specific domains or pages (e.g., `github.com`, `twitter.com/compose`)
 
 ### Website Integration
 - **Show enhancement icons on websites**: Toggle the sparkles icons that appear in text inputs across websites
@@ -174,7 +175,12 @@ The extension is built with vanilla JavaScript and follows a clean, modular arch
 
 ## Version History
 
-### v2.0.0 (Current)
+### v2.1.0 (Current)
+- Added domain blocking feature to disable enhancement icons on specific websites
+- Fixed content script initialization timing issues
+- Improved options page UI styling
+
+### v2.0.0
 - Enhancement text icon (✨) now appear directly in text inputs across websites like Teams, Slack, Gmail and others
 
 ### v1.1.0
