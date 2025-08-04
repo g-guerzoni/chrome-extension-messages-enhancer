@@ -16,7 +16,7 @@ A Chrome extension that helps improve the tone, clarity, and politeness of your 
 - **One-click enhancement**: Click the sparkles icon to instantly open the extension with 
 your text pre-filled and automatically enhanced
 
-<img width="850" height="276" alt="Screenshot 2025-08-04 at 13 13 42" src="https://github.com/user-attachments/assets/48c4bb3e-d7ec-4d62-a4dc-54a92d6b83b3" />
+<img width="929" height="70" alt="Screenshot 2025-08-04 at 13 20 40" src="https://github.com/user-attachments/assets/f59e7823-a668-4b57-94db-13ea93d0b15d" />
 
 ### Language & Translation
 - **Automatic language detection** for any input text
