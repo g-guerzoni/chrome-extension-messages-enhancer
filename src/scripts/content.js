@@ -4,25 +4,18 @@
 (function() {
   'use strict';
 
-  console.log('Message Enhancer: Content script loaded on', window.location.href);
-  console.log('Message Enhancer: Current hostname:', window.location.hostname);
-  console.log('Message Enhancer: Current pathname:', window.location.pathname);
 
   // Early safety checks
   if (window.location.protocol.startsWith('chrome')) {
-    console.log('Message Enhancer: Skipping chrome:// URL');
     return;
   }
   if (window.location.protocol.startsWith('moz-extension')) {
-    console.log('Message Enhancer: Skipping moz-extension:// URL');
     return;
   }
   if (window.location.protocol === 'about:') {
-    console.log('Message Enhancer: Skipping about: URL');
     return;
   }
   if (!document.body) {
-    console.log('Message Enhancer: No document.body, waiting...');
     return;
   }
 
@@ -77,7 +70,6 @@
     const isBlocked = isCurrentUrlBlocked();
     
     const shouldRun = shouldRunBasic && !isBlocked;
-    console.log('Message Enhancer: Should run on', hostname, '?', shouldRun, '(blocked by user:', isBlocked, ')');
     return shouldRun;
   }
 
@@ -143,27 +135,22 @@
     // Position icon relative to parent element
     const parent = input.parentElement;
     if (parent) {
-      console.log('Message Enhancer: Adding icon to parent:', parent);
       if (window.getComputedStyle(parent).position === 'static') {
         parent.style.position = 'relative';
       }
       parent.appendChild(icon);
     } else {
-      console.log('Message Enhancer: No parent element for input:', input);
       return null;
     }
 
     // Click handler - open popup with text
     icon.addEventListener('click', (e) => {
-      console.log('Message Enhancer: Icon clicked!');
       e.preventDefault();
       e.stopPropagation();
       
       const text = getInputText(input).trim();
-      console.log('Message Enhancer: Text to enhance:', text);
       
       if (!text) {
-        console.log('Message Enhancer: No text found, aborting');
         return;
       }
       
@@ -175,24 +162,19 @@
       
       // Check if extension context is valid before sending message
       if (!chrome.runtime?.id) {
-        console.log('Message Enhancer: Extension context invalidated, please reload the page');
         alert('Extension was reloaded. Please refresh this page to use Message Enhancer.');
         return;
       }
       
       // Send message to background script to open popup with text
-      console.log('Message Enhancer: Sending message to background script');
       chrome.runtime.sendMessage({
         action: 'openPopupWithText',
         text: text.substring(0, 1000) // Limit to 1000 chars
       }).then(response => {
-        console.log('Message Enhancer: Background script response:', response);
+        // Success
       }).catch(err => {
         if (err.message?.includes('Extension context invalidated')) {
-          console.log('Message Enhancer: Extension was reloaded, please refresh the page');
           alert('Extension was reloaded. Please refresh this page to use Message Enhancer.');
-        } else {
-          console.error('Message Enhancer: Failed to send message:', err);
         }
       });
     });
@@ -217,8 +199,6 @@
     const hasFocus = document.activeElement === input;
     const hasText = text.length > 0;
     
-    console.log(`Message Enhancer: Icon visibility (${eventType}) for input:`, input, 'hasFocus:', hasFocus, 'textLength:', text.length);
-    
     // Clear any existing timeout for this input
     if (inputTimeouts.has(input)) {
       clearTimeout(inputTimeouts.get(input));
@@ -231,18 +211,15 @@
       hideAllOtherIcons(input);
       currentFocusedInput = input;
       icon.style.display = 'flex';
-      console.log('Message Enhancer: Showing icon for focused input with text');
       
     } else if (!hasFocus && hasText && currentFocusedInput === input) {
       // Input lost focus but has text - keep visible for 10 seconds
-      console.log('Message Enhancer: Input lost focus, keeping icon visible for 10 seconds');
       const timeoutId = setTimeout(() => {
         icon.style.display = 'none';
         inputTimeouts.delete(input);
         if (currentFocusedInput === input) {
           currentFocusedInput = null;
         }
-        console.log('Message Enhancer: Icon hidden after 10-second delay');
       }, 10000);
       
       inputTimeouts.set(input, timeoutId);
@@ -267,7 +244,6 @@
         }
         // Hide the icon
         icon.style.display = 'none';
-        console.log('Message Enhancer: Hidden icon for other input:', input);
       }
     });
   }
@@ -275,19 +251,15 @@
   // Process a single input
   function processInput(input) {
     if (!isValidInput(input)) {
-      console.log('Message Enhancer: Skipping invalid input:', input);
       return;
     }
     
-    console.log('Message Enhancer: Processing input:', input);
     processedInputs.add(input);
     const icon = createIcon(input);
     if (!icon) {
-      console.log('Message Enhancer: Failed to create icon for input:', input);
       return;
     }
 
-    console.log('Message Enhancer: Created icon for input:', input);
 
     // Store the input-icon mapping
     inputIconMap.set(input, icon);
@@ -305,26 +277,14 @@
   function findInputs() {
     if (!isEnabled) return;
     if (!shouldRun()) {
-      console.log('Message Enhancer: Skipping input processing - shouldRun() returned false');
       return;
     }
     
     const selectors = 'textarea, input[type="text"], input[type="email"], input:not([type]), [contenteditable="true"]';
     const inputs = document.querySelectorAll(selectors);
     
-    console.log('Message Enhancer: Found', inputs.length, 'potential inputs');
     
     inputs.forEach((input, index) => {
-      console.log(`Input ${index}:`, {
-        tag: input.tagName,
-        type: input.type,
-        contentEditable: input.contentEditable,
-        disabled: input.disabled,
-        readOnly: input.readOnly,
-        name: input.name,
-        id: input.id,
-        className: input.className
-      });
       processInput(input);
     });
     
@@ -338,15 +298,12 @@
     
     // Microsoft Teams - simplified selectors for better performance
     if (hostname.includes('teams.microsoft.com')) {
-      console.log('Message Enhancer: Detected Teams, looking for Teams-specific inputs');
       
       // Simplified Teams selectors to reduce performance impact
       const teamsInputs = document.querySelectorAll('[role="textbox"][contenteditable="true"], .ck-content');
-      console.log('Message Enhancer: Found', teamsInputs.length, 'Teams-specific inputs');
       
       teamsInputs.forEach(input => {
         if (!processedInputs.has(input)) {
-          console.log('Processing Teams input:', input);
           processInput(input);
         }
       });
@@ -378,7 +335,6 @@
     
     // Check if extension context is valid
     if (!chrome.runtime?.id) {
-      console.log('Message Enhancer: Extension context not available during init');
       return;
     }
     
@@ -386,20 +342,14 @@
     try {
       chrome.storage.sync.get(['enableContentScript', 'blockedDomains'], (result) => {
         if (chrome.runtime.lastError) {
-          console.log('Message Enhancer: Storage access failed:', chrome.runtime.lastError);
           return;
         }
         
         isEnabled = result.enableContentScript !== false; // Enabled by default
         blockedDomains = parseBlockedDomains(result.blockedDomains || '');
-        console.log('Message Enhancer: Content script enabled:', isEnabled);
-        console.log('Message Enhancer: Raw blocked domains string:', result.blockedDomains);
-        console.log('Message Enhancer: Parsed blocked domains:', blockedDomains);
-        console.log('Message Enhancer: Current URL blocked?', isCurrentUrlBlocked());
         
         // Check if we should run on this site AFTER loading settings
         if (!shouldRun()) {
-          console.log('Message Enhancer: Not running on this site due to blocking rules');
           return;
         }
         
@@ -409,7 +359,6 @@
           // Re-scan periodically for dynamically loaded content
           const intervalId = setInterval(() => {
             if (!chrome.runtime?.id) {
-              console.log('Message Enhancer: Extension context lost, clearing interval');
               clearInterval(intervalId);
               return;
             }
@@ -424,7 +373,6 @@
             
             const target = e.target;
             if (isValidInput(target) && !processedInputs.has(target)) {
-              console.log('Message Enhancer: Detected new input on focus, processing:', target);
               processInput(target);
             }
           });
@@ -435,7 +383,6 @@
       // Listen for settings changes
       chrome.storage.onChanged.addListener((changes) => {
         if (!chrome.runtime?.id) {
-          console.log('Message Enhancer: Extension context lost in storage listener');
           return;
         }
         
@@ -457,7 +404,6 @@
         
         if (changes.blockedDomains) {
           blockedDomains = parseBlockedDomains(changes.blockedDomains.newValue || '');
-          console.log('Message Enhancer: Updated blocked domains:', blockedDomains);
           
           // If current site is now blocked, remove all icons
           if (isCurrentUrlBlocked()) {
@@ -468,16 +414,13 @@
             
             const icons = document.querySelectorAll('.message-enhancer-icon, [title*="Message Enhancer"]');
             icons.forEach(icon => icon.remove());
-            console.log('Message Enhancer: Site is now blocked, removed all icons');
           } else if (isEnabled) {
             // Site is no longer blocked, re-scan for inputs
             findInputs();
-            console.log('Message Enhancer: Site is no longer blocked, re-scanning inputs');
           }
         }
       });
     } catch (error) {
-      console.log('Message Enhancer: Error during initialization:', error);
     }
   }
 
@@ -515,10 +458,8 @@
 
   // Start when ready
   if (document.readyState === 'loading') {
-    console.log('Message Enhancer: DOM still loading, waiting for DOMContentLoaded');
     document.addEventListener('DOMContentLoaded', init);
   } else {
-    console.log('Message Enhancer: DOM ready, starting with delay');
     setTimeout(init, 500); // Small delay to be safe
   }
 

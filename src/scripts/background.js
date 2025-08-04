@@ -77,15 +77,14 @@ async function enhanceText({ text, tone, translate, type }) {
 }
 
 function constructSystemMessage(tone, type, shouldTranslate) {
-  let textLanguage = "Keep the text in its original language.";
-
+  let baseTask = "You are a professional text enhancer. Your task is to improve the given text by:";
+  
   if (shouldTranslate) {
-    textLanguage =
-      "Translate the text to English while preserving its original meaning. Make it readable and understandable for a non native English audience.";
+    baseTask = "You are a professional text enhancer and translator. FIRST translate the text to English, THEN improve it by:";
   }
 
   const instructions = {
-    base: ["You are a professional text enhancer. Your task is to improve the given text by:"],
+    base: [baseTask],
     core: [
       "Enhancing clarity and readability",
       "Fixing grammar, punctuation, and other errors",
@@ -112,7 +111,12 @@ function constructSystemMessage(tone, type, shouldTranslate) {
       "Do not convert existing acronyms to full words",
       "Do not use 'Just a heads up', 'Just to clarify' or similar phrases, unless the original text includes them",
     ],
-    translation: [textLanguage],
+    translation: shouldTranslate ? [
+      "CRITICAL: This text MUST be translated to English first, then enhanced.",
+      "If the text is already in English, enhance it normally.",
+      "If the text is in any other language, translate it to clear, natural English while preserving meaning.",
+      "After translation, apply all enhancement rules to the English version."
+    ] : ["Keep the text in its original language."],
     tones: {
       neutral: [
         "Keep the tone casual and natural - like how a regular person would actually speak.",
@@ -146,10 +150,10 @@ function constructSystemMessage(tone, type, shouldTranslate) {
 
   const messageComponents = [
     ...instructions.base,
+    ...instructions.translation.map((item) => `- ${item}`),
     ...instructions.core.map((item) => `- ${item}`),
     ...instructions.formatting.map((item) => `- ${item}`),
     ...instructions.avoidance.map((item) => `- ${item}`),
-    ...instructions.translation.map((item) => `- ${item}`),
     ...(instructions.tones[tone] || instructions.tones.neutral).map((item) => `- ${item}`),
     ...instructions.messageTypes[type === "email" ? "email" : "message"],
     ...instructions.final,

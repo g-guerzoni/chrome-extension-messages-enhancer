@@ -1,6 +1,6 @@
 {
   "name": "chrome-extension-messages-enhancer",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "A Chrome extension that enhances message tone and clarity using GPT-4.1 Nano",
   "private": true,
   "author": "Guilherme Guerzoni",
