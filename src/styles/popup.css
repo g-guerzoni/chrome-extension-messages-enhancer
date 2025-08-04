@@ -55,7 +55,7 @@ body {
 }
 
 .container {
-  padding: 1rem;
+  padding: 10px;
 }
 
 header {
@@ -78,6 +78,7 @@ h3 {
   margin-bottom: 0.5rem;
 }
 
+.input-header,
 .output-header {
   display: flex;
   justify-content: space-between;

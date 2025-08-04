@@ -1,5 +1,5 @@
 const OPENAI_API_ENDPOINT = "https://api.openai.com/v1/chat/completions";
-const MODEL = "o4-mini-2025-04-16";
+const MODEL = "gpt-4.1-nano-2025-04-14";
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "enhanceText") {

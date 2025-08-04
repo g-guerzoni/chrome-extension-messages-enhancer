@@ -2,12 +2,29 @@ const inputText = document.getElementById("input-text");
 const outputText = document.getElementById("output-text");
 const enhanceBtn = document.getElementById("enhance-btn");
 const copyBtn = document.getElementById("copy-btn");
+const cleanBtn = document.getElementById("clean-btn");
 const settingsBtn = document.getElementById("settings-btn");
 const charCount = document.getElementById("char-count");
 
+function debounce(func, wait) {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+}
+
+const debouncedSaveText = debounce(saveTextToStorage, 500);
+
 inputText.addEventListener("input", updateCharCount);
+inputText.addEventListener("input", debouncedSaveText);
 enhanceBtn.addEventListener("click", enhanceText);
 copyBtn.addEventListener("click", copyToClipboard);
+cleanBtn.addEventListener("click", cleanAllText);
 settingsBtn.addEventListener("click", openSettings);
 
 function updateCharCount() {
@@ -46,6 +63,7 @@ async function enhanceText() {
 
     outputText.value = response.enhancedText;
     copyBtn.disabled = false;
+    saveTextToStorage();
   } catch (error) {
     showError(error.message);
   } finally {
@@ -68,6 +86,14 @@ async function copyToClipboard() {
   } catch (error) {
     showError("Failed to copy text to clipboard");
   }
+}
+
+function cleanAllText() {
+  inputText.value = "";
+  outputText.value = "";
+  updateCharCount();
+  copyBtn.disabled = true;
+  debouncedSaveText();
 }
 
 function openSettings() {
@@ -131,7 +157,36 @@ document.addEventListener("DOMContentLoaded", () => {
     if (changes.openaiApiKey) {
       checkApiKeyAndUpdateUI();
     }
+    if (changes.keepTextOnClose && !changes.keepTextOnClose.newValue) {
+      inputText.value = "";
+      outputText.value = "";
+      updateCharCount();
+      copyBtn.disabled = true;
+    }
   });
 
   checkApiKeyAndUpdateUI();
+  loadPersistedText();
 });
+
+function saveTextToStorage() {
+  chrome.storage.sync.get(["keepTextOnClose"], (result) => {
+    if (result.keepTextOnClose !== false) {
+      chrome.storage.sync.set({
+        persistedInputText: inputText.value,
+        persistedOutputText: outputText.value,
+      });
+    }
+  });
+}
+
+function loadPersistedText() {
+  chrome.storage.sync.get(["keepTextOnClose", "persistedInputText", "persistedOutputText"], (result) => {
+    if (result.keepTextOnClose !== false) {
+      inputText.value = result.persistedInputText || "";
+      outputText.value = result.persistedOutputText || "";
+      updateCharCount();
+      copyBtn.disabled = !outputText.value;
+    }
+  });
+}

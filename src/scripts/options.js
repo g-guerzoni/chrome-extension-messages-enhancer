@@ -1,10 +1,11 @@
 const apiKeyInput = document.getElementById("api-key");
 const themeSelect = document.getElementById("theme");
+const keepTextCheckbox = document.getElementById("keep-text");
 const saveButton = document.getElementById("save-btn");
 const statusDiv = document.getElementById("status");
 const togglePasswordBtn = document.querySelector(".toggle-password");
 
-chrome.storage.sync.get(["openaiApiKey", "theme"], (result) => {
+chrome.storage.sync.get(["openaiApiKey", "theme", "keepTextOnClose"], (result) => {
   if (result.openaiApiKey) {
     apiKeyInput.value = result.openaiApiKey;
   }
@@ -15,11 +16,17 @@ chrome.storage.sync.get(["openaiApiKey", "theme"], (result) => {
     themeSelect.value = "system";
     document.documentElement.setAttribute("data-theme", "system");
   }
+  if (result.keepTextOnClose !== undefined) {
+    keepTextCheckbox.checked = result.keepTextOnClose;
+  } else {
+    keepTextCheckbox.checked = true;
+  }
 });
 
 saveButton.addEventListener("click", () => {
   const apiKey = apiKeyInput.value.trim();
   const theme = themeSelect.value;
+  const keepTextOnClose = keepTextCheckbox.checked;
 
   if (!apiKey) {
     showStatus("Please enter an API key", "error");
@@ -31,20 +38,25 @@ saveButton.addEventListener("click", () => {
     return;
   }
 
-  chrome.storage.sync.set(
-    {
-      openaiApiKey: apiKey,
-      theme: theme,
-    },
-    () => {
-      if (chrome.runtime.lastError) {
-        showStatus("Error saving settings: " + chrome.runtime.lastError.message, "error");
-      } else {
-        showStatus("Settings saved successfully!", "success");
-        document.documentElement.setAttribute("data-theme", theme);
-      }
+  const settingsToSave = {
+    openaiApiKey: apiKey,
+    theme: theme,
+    keepTextOnClose: keepTextOnClose,
+  };
+
+  if (!keepTextOnClose) {
+    settingsToSave.persistedInputText = "";
+    settingsToSave.persistedOutputText = "";
+  }
+
+  chrome.storage.sync.set(settingsToSave, () => {
+    if (chrome.runtime.lastError) {
+      showStatus("Error saving settings: " + chrome.runtime.lastError.message, "error");
+    } else {
+      showStatus("Settings saved successfully!", "success");
+      document.documentElement.setAttribute("data-theme", theme);
     }
-  );
+  });
 });
 
 themeSelect.addEventListener("change", (e) => {
