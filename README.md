@@ -1,6 +1,6 @@
 # AI Message Enhancer Chrome Extension
 
-A Chrome extension that enhances, corrects, and beautifies your text using OpenAI's GPT-4.1 Nano API. Fix typos, improve clarity, adjust tone, and polish your writing for Slack, Teams, email, and any text input across the web.
+A Chrome extension that enhances, corrects, and beautifies your text using OpenAI's GPT Nano API. Fix typos, improve clarity, adjust tone, and polish your writing for Slack, Teams, email, and any text input across the web.
 
 ## Features
 
@@ -9,9 +9,9 @@ A Chrome extension that enhances, corrects, and beautifies your text using OpenA
 - **Correct grammar and punctuation** mistakes
 - **Improve clarity and readability** of your writing
 - **Beautify and polish** text while preserving your original meaning
-- Powered by GPT-4.1 Nano (use your own OpenAI API key)
+- Powered by GPT (use your own OpenAI API key)
 
-<img width="511" height="608" alt="Screenshot 2025-08-04 at 13 11 22" src="https://github.com/user-attachments/assets/edf431f5-ceaf-4f5a-98ab-ccc42779e5b6" />
+<img width="509" height="604" alt="image" src="https://github.com/user-attachments/assets/e080ca0a-d7ff-4488-af7c-781c6149b0b5" />
 
 ### Website Integration (Grammarly-style)
 - **Enhancement icons appear directly in text inputs** across websites like Teams, Slack, Gmail, and any web page
@@ -19,6 +19,10 @@ A Chrome extension that enhances, corrects, and beautifies your text using OpenA
 - **Seamless workflow**: Text is automatically filled and enhanced, ready to copy back
 
 <img width="929" height="70" alt="Screenshot 2025-08-04 at 13 20 40" src="https://github.com/user-attachments/assets/f59e7823-a668-4b57-94db-13ea93d0b15d" />
+
+### Settings
+
+<img width="553" height="742" alt="image" src="https://github.com/user-attachments/assets/33a46d48-d109-4b44-a58b-2e60f06a9a7a" />
 
 ### Language & Translation
 - **Automatic language detection** for any input text
