@@ -85,7 +85,6 @@ We may update this privacy policy from time to time. Changes will be reflected i
 ## Contact
 For privacy-related questions or concerns, please contact:
 - GitHub: https://github.com/g-guerzoni/chrome-extension-messages-enhancer
-- Email: guilherme.guerzoni@gmail.com
 
 ## Compliance
 This extension complies with:
