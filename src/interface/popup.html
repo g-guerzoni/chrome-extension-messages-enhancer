@@ -12,8 +12,8 @@
     <div class="container">
       <header>
         <h1>Message Enhancer</h1>
-        <button id="settings-btn" class="icon-button" title="Settings">
-          <span class="material-icons">settings</span>
+        <button id="settings-btn" class="icon-button" aria-label="Open settings" title="Settings">
+          <span class="material-icons" aria-hidden="true">settings</span>
         </button>
       </header>
 
@@ -21,21 +21,24 @@
         <div class="input-section">
           <div class="input-header">
             <label for="input-text">Original Text</label>
-            <button id="clean-btn" class="icon-button" title="Clean All Text">
-              <span class="material-icons">delete</span>
+            <button id="clean-btn" class="icon-button" aria-label="Clear all text" title="Clean All Text">
+              <span class="material-icons" aria-hidden="true">delete</span>
             </button>
           </div>
           <textarea
             id="input-text"
             placeholder="Enter your message here (max 10000 characters)"
             maxlength="10000"
+            aria-describedby="char-count-display"
           ></textarea>
-          <div class="char-count"><span id="char-count">0</span>/10000</div>
+          <div id="char-count-display" class="char-count" aria-live="polite" aria-atomic="true">
+            <span id="char-count">0</span>/10000 characters
+          </div>
         </div>
 
-        <div class="options-section">
-          <div class="tone-selection">
-            <h3>Tone</h3>
+        <div class="options-section" role="region" aria-label="Enhancement options">
+          <fieldset class="tone-selection">
+            <legend>Tone</legend>
             <div class="radio-group">
               <label>
                 <input type="radio" name="tone" value="neutral" checked />
@@ -46,52 +49,52 @@
                 Formal
               </label>
             </div>
-          </div>
-          <div>
-            <div class="message-type">
-              <h3>Message Type</h3>
-              <div class="radio-group">
-                <label>
-                  <input type="radio" name="type" value="message" checked />
-                  Message
-                </label>
-                <label>
-                  <input type="radio" name="type" value="email" />
-                  Email
-                </label>
-              </div>
+          </fieldset>
+          <fieldset class="message-type">
+            <legend>Message Type</legend>
+            <div class="radio-group">
+              <label>
+                <input type="radio" name="type" value="message" checked />
+                Message
+              </label>
+              <label>
+                <input type="radio" name="type" value="email" />
+                Email
+              </label>
             </div>
-          </div>
-          <div>
-            <h3>Translation</h3>
+          </fieldset>
+          <fieldset>
+            <legend>Translation</legend>
             <div class="checkbox-group">
               <label>
                 <input type="checkbox" name="translate" id="translate" />
                 Translate to English
               </label>
             </div>
-          </div>
+          </fieldset>
         </div>
 
-        <button id="enhance-btn" class="primary-button">
+        <button id="enhance-btn" class="primary-button" aria-label="Enhance message">
           <span class="button-text">Enhance Message (press Enter)</span>
-          <div class="loading-spinner"></div>
+          <div class="loading-spinner" role="status" aria-label="Processing"></div>
         </button>
 
-        <div class="output-section">
+        <div class="output-section" role="region" aria-label="Enhanced text output">
           <div class="output-header">
             <label for="output-text">Enhanced Text</label>
             <div class="button-group">
-              <button id="copy-btn" class="icon-button" title="Copy to Clipboard">
-                <span class="material-icons">content_copy</span>
+              <button id="copy-btn" class="icon-button" aria-label="Copy enhanced text to clipboard" title="Copy to Clipboard">
+                <span class="material-icons" aria-hidden="true">content_copy</span>
               </button>
-              <button id="replace-btn" class="icon-button replace-btn" title="Replace Input with Enhanced Text">
-                <span class="material-icons">forward</span>
+              <button id="replace-btn" class="icon-button replace-btn" aria-label="Replace original text with enhanced version" title="Replace Input with Enhanced Text">
+                <span class="material-icons" aria-hidden="true">forward</span>
               </button>
             </div>
           </div>
-          <textarea id="output-text" readonly></textarea>
+          <textarea id="output-text" readonly aria-live="polite"></textarea>
         </div>
+
+        <div id="status-announcer" role="status" aria-live="polite" aria-atomic="true" class="sr-only"></div>
       </main>
     </div>
     <script src="../scripts/popup.js" type="module"></script>

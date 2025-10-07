@@ -7,6 +7,16 @@ const cleanBtn = document.getElementById("clean-btn");
 const settingsBtn = document.getElementById("settings-btn");
 const charCount = document.getElementById("char-count");
 const translateCheckbox = document.getElementById("translate");
+const statusAnnouncer = document.getElementById("status-announcer");
+
+function announceToScreenReader(message) {
+  if (statusAnnouncer) {
+    statusAnnouncer.textContent = message;
+    setTimeout(() => {
+      statusAnnouncer.textContent = "";
+    }, 1000);
+  }
+}
 
 function debounce(func, wait) {
   let timeout;
@@ -75,12 +85,13 @@ async function enhanceText() {
 
     outputText.value = response.enhancedText;
     copyBtn.disabled = false;
+    announceToScreenReader("Text enhancement complete");
     chrome.storage.local.get(["fromWebsite"], (result) => {
       if (result.fromWebsite) {
         replaceBtn.classList.add("show");
       }
     });
-    
+
     saveTextToStorage();
   } catch (error) {
     showError(error.message);
@@ -97,9 +108,12 @@ async function copyToClipboard() {
   try {
     await navigator.clipboard.writeText(text);
 
-    copyBtn.innerHTML = '<span class="material-icons">check</span>';
+    copyBtn.innerHTML = '<span class="material-icons" aria-hidden="true">check</span>';
+    copyBtn.setAttribute("aria-label", "Text copied to clipboard");
+    announceToScreenReader("Text copied to clipboard");
     setTimeout(() => {
-      copyBtn.innerHTML = '<span class="material-icons">content_copy</span>';
+      copyBtn.innerHTML = '<span class="material-icons" aria-hidden="true">content_copy</span>';
+      copyBtn.setAttribute("aria-label", "Copy enhanced text to clipboard");
     }, 2000);
   } catch (error) {
     showError("Failed to copy text to clipboard");
@@ -134,6 +148,7 @@ async function replaceInputWithOutput() {
       updateCharCount();
       copyBtn.disabled = true;
       replaceBtn.classList.remove("show");
+      announceToScreenReader("Text replaced successfully");
       debouncedSaveText();
     } else {
       await handleConnectionFailure(enhancedText);
@@ -235,12 +250,17 @@ function showError(message) {
 function setLoading(isLoading) {
   enhanceBtn.disabled = isLoading;
   enhanceBtn.className = isLoading ? "primary-button loading" : "primary-button";
+  enhanceBtn.setAttribute("aria-busy", isLoading ? "true" : "false");
   inputText.disabled = isLoading;
   translateCheckbox.disabled = isLoading;
   cleanBtn.disabled = isLoading;
   document.querySelectorAll('input[type="radio"]').forEach((radio) => {
     radio.disabled = isLoading;
   });
+
+  if (isLoading) {
+    announceToScreenReader("Processing your text, please wait");
+  }
 }
 
 function checkApiKeyAndUpdateUI() {

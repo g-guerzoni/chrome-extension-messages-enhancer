@@ -1,17 +1,11 @@
 {
   "name": "chrome-extension-messages-enhancer",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "description": "A Chrome extension that enhances text, corrects typos, fixes grammar, and beautifies writing using AI",
   "private": true,
   "author": "Guilherme Guerzoni",
   "repository": {
     "type": "git",
     "url": "git@github.com:g-guerzoni/chrome-extension-messages-enhancer.git"
-  },
-  "scripts": {
-    "generate-icons": "node generate-icons.js"
-  },
-  "devDependencies": {
-    "sharp": "^0.33.2"
   }
 }

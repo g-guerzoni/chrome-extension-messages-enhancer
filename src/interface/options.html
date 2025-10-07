@@ -9,9 +9,10 @@
     <link rel="stylesheet" href="../styles/options.css">
 </head>
 <body>
-    <h1>Message Enhancer Settings</h1>
-    
-    <div class="form-group">
+    <main>
+        <h1>Message Enhancer Settings</h1>
+
+        <div class="form-group">
         <label for="api-key">OpenAI API Key</label>
         <div class="input-wrapper">
             <input 
@@ -20,8 +21,8 @@
                 placeholder="Enter your OpenAI API key"
                 autocomplete="off"
             >
-            <button type="button" class="toggle-password" title="Toggle password visibility">
-                <span class="material-icons">visibility_off</span>
+            <button type="button" class="toggle-password" aria-label="Toggle password visibility" title="Toggle password visibility">
+                <span class="material-icons" aria-hidden="true">visibility_off</span>
             </button>
         </div>
     </div>
@@ -81,9 +82,10 @@
         <p class="help-text">Enhancement icons will be hidden on these domains. Use full domains (github.com) to block entire sites, or include paths (github.com/user/repo) to block specific pages only.</p>
     </div>
 
-    <button id="save-btn">Save Settings</button>
-    
-    <div id="status" class="status"></div>
+        <button id="save-btn" aria-label="Save all settings">Save Settings</button>
+
+        <div id="status" class="status" role="status" aria-live="polite" aria-atomic="true"></div>
+    </main>
 
     <script src="../scripts/options.js" type="module"></script>
 </body>
