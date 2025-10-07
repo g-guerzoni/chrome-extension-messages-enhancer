@@ -27,10 +27,10 @@
           </div>
           <textarea
             id="input-text"
-            placeholder="Enter your message here (max 1000 characters)"
-            maxlength="1000"
+            placeholder="Enter your message here (max 10000 characters)"
+            maxlength="10000"
           ></textarea>
-          <div class="char-count"><span id="char-count">0</span>/1000</div>
+          <div class="char-count"><span id="char-count">0</span>/10000</div>
         </div>
 
         <div class="options-section">
@@ -81,9 +81,14 @@
         <div class="output-section">
           <div class="output-header">
             <label for="output-text">Enhanced Text</label>
-            <button id="copy-btn" class="icon-button" title="Copy to Clipboard">
-              <span class="material-icons">content_copy</span>
-            </button>
+            <div class="button-group">
+              <button id="copy-btn" class="icon-button" title="Copy to Clipboard">
+                <span class="material-icons">content_copy</span>
+              </button>
+              <button id="replace-btn" class="icon-button replace-btn" title="Replace Input with Enhanced Text">
+                <span class="material-icons">forward</span>
+              </button>
+            </div>
           </div>
           <textarea id="output-text" readonly></textarea>
         </div>

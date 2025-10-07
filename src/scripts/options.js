@@ -2,12 +2,13 @@ const apiKeyInput = document.getElementById("api-key");
 const themeSelect = document.getElementById("theme");
 const keepTextCheckbox = document.getElementById("keep-text");
 const contentScriptCheckbox = document.getElementById("content-script");
+const debugModeCheckbox = document.getElementById("debug-mode");
 const blockedDomainsTextarea = document.getElementById("blocked-domains");
 const saveButton = document.getElementById("save-btn");
 const statusDiv = document.getElementById("status");
 const togglePasswordBtn = document.querySelector(".toggle-password");
 
-chrome.storage.sync.get(["openaiApiKey", "theme", "keepTextOnClose", "enableContentScript", "blockedDomains"], (result) => {
+chrome.storage.sync.get(["openaiApiKey", "theme", "keepTextOnClose", "enableContentScript", "debugMode", "blockedDomains"], (result) => {
   if (result.openaiApiKey) {
     apiKeyInput.value = result.openaiApiKey;
   }
@@ -27,6 +28,11 @@ chrome.storage.sync.get(["openaiApiKey", "theme", "keepTextOnClose", "enableCont
     contentScriptCheckbox.checked = result.enableContentScript;
   } else {
     contentScriptCheckbox.checked = true;
+  }
+  if (result.debugMode !== undefined) {
+    debugModeCheckbox.checked = result.debugMode;
+  } else {
+    debugModeCheckbox.checked = false;
   }
   if (result.blockedDomains) {
     blockedDomainsTextarea.value = result.blockedDomains;
@@ -61,6 +67,7 @@ saveButton.addEventListener("click", () => {
   const theme = themeSelect.value;
   const keepTextOnClose = keepTextCheckbox.checked;
   const enableContentScript = contentScriptCheckbox.checked;
+  const debugMode = debugModeCheckbox.checked;
   const blockedDomainsString = blockedDomainsTextarea.value.trim();
 
   if (!apiKey) {
@@ -84,6 +91,7 @@ saveButton.addEventListener("click", () => {
     theme: theme,
     keepTextOnClose: keepTextOnClose,
     enableContentScript: enableContentScript,
+    debugMode: debugMode,
     blockedDomains: blockedDomainsString,
   };
 

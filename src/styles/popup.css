@@ -321,6 +321,19 @@ button:disabled {
   font-size: 1.25rem;
 }
 
+.button-group {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.replace-btn {
+  display: none;
+}
+
+.replace-btn.show {
+  display: flex;
+}
+
 
 @keyframes pulse {
   0% {

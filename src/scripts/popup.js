@@ -2,6 +2,7 @@ const inputText = document.getElementById("input-text");
 const outputText = document.getElementById("output-text");
 const enhanceBtn = document.getElementById("enhance-btn");
 const copyBtn = document.getElementById("copy-btn");
+const replaceBtn = document.getElementById("replace-btn");
 const cleanBtn = document.getElementById("clean-btn");
 const settingsBtn = document.getElementById("settings-btn");
 const charCount = document.getElementById("char-count");
@@ -24,6 +25,7 @@ inputText.addEventListener("input", updateCharCount);
 inputText.addEventListener("input", debouncedSaveText);
 enhanceBtn.addEventListener("click", enhanceText);
 copyBtn.addEventListener("click", copyToClipboard);
+replaceBtn.addEventListener("click", replaceInputWithOutput);
 cleanBtn.addEventListener("click", cleanAllText);
 settingsBtn.addEventListener("click", openSettings);
 
@@ -31,12 +33,11 @@ function updateCharCount() {
   const count = inputText.value.length;
   charCount.textContent = count;
 
-  if (count > 1000) {
-    inputText.value = inputText.value.slice(0, 1000);
-    charCount.textContent = "1000";
+  if (count > 10000) {
+    inputText.value = inputText.value.slice(0, 10000);
+    charCount.textContent = "10000";
   }
 }
-
 
 async function enhanceText() {
   const text = inputText.value.trim();
@@ -64,6 +65,12 @@ async function enhanceText() {
 
     outputText.value = response.enhancedText;
     copyBtn.disabled = false;
+    chrome.storage.local.get(["fromWebsite"], (result) => {
+      if (result.fromWebsite) {
+        replaceBtn.classList.add("show");
+      }
+    });
+    
     saveTextToStorage();
   } catch (error) {
     showError(error.message);
@@ -89,11 +96,100 @@ async function copyToClipboard() {
   }
 }
 
+async function replaceInputWithOutput() {
+  const enhancedText = outputText.value;
+
+  if (!enhancedText) return;
+
+  try {
+    const tabs = await chrome.tabs.query({active: true, currentWindow: true});
+    if (!tabs[0]) {
+      showError("No active tab found");
+      return;
+    }
+
+    const tabId = tabs[0].id;
+    const connectionHealthy = await checkContentScriptConnection(tabId);
+
+    if (!connectionHealthy) {
+      await handleConnectionFailure(enhancedText);
+      return;
+    }
+
+    const success = await replaceTextWithRetry(tabId, enhancedText, 3);
+
+    if (success) {
+      inputText.value = "";
+      outputText.value = "";
+      updateCharCount();
+      copyBtn.disabled = true;
+      replaceBtn.classList.remove("show");
+      debouncedSaveText();
+    } else {
+      await handleConnectionFailure(enhancedText);
+    }
+  } catch (error) {
+    showError("Error accessing tab: " + error.message);
+  }
+}
+
+async function checkContentScriptConnection(tabId, timeoutMs = 2000) {
+  try {
+    const response = await Promise.race([
+      chrome.tabs.sendMessage(tabId, { action: "ping" }),
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error("timeout")), timeoutMs)
+      )
+    ]);
+    return response && response.pong === true;
+  } catch (error) {
+    return false;
+  }
+}
+
+async function replaceTextWithRetry(tabId, text, maxRetries) {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const response = await chrome.tabs.sendMessage(tabId, {
+        action: "replaceText",
+        text: text
+      });
+      
+      if (response && response.success) {
+        return true;
+      }
+
+      if (attempt < maxRetries) {
+        await new Promise(resolve => setTimeout(resolve, attempt * 500));
+      }
+    } catch (error) {
+      if (attempt === maxRetries) {
+        console.error("Final retry failed:", error.message);
+      }
+    }
+  }
+  return false;
+}
+
+async function handleConnectionFailure(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    showError("Connection lost. Text copied to clipboard - please paste manually into the input field.");
+    copyBtn.innerHTML = '<span class="material-icons">check</span>';
+    setTimeout(() => {
+      copyBtn.innerHTML = '<span class="material-icons">content_copy</span>';
+    }, 3000);
+  } catch (clipboardError) {
+    showError("Connection failed and could not copy to clipboard. Please copy the enhanced text manually from the output field.");
+  }
+}
+
 function cleanAllText() {
   inputText.value = "";
   outputText.value = "";
   updateCharCount();
   copyBtn.disabled = true;
+  replaceBtn.classList.remove("show");
   debouncedSaveText();
 }
 
@@ -163,12 +259,18 @@ document.addEventListener("DOMContentLoaded", () => {
       outputText.value = "";
       updateCharCount();
       copyBtn.disabled = true;
+      replaceBtn.classList.remove("show");
     }
   });
 
   checkApiKeyAndUpdateUI();
   loadPersistedText();
   checkForPendingText();
+});
+
+// Clear website flag when popup closes
+window.addEventListener("beforeunload", () => {
+  chrome.storage.local.remove(["fromWebsite"]);
 });
 
 function saveTextToStorage() {
@@ -196,30 +298,24 @@ function loadPersistedText() {
 function checkForPendingText() {
   chrome.storage.local.get(["pendingText", "pendingTimestamp", "autoEnhance"], (result) => {
     if (result.pendingText && result.pendingTimestamp) {
-      // Check if the pending text is recent (within 10 seconds)
       const isRecent = (Date.now() - result.pendingTimestamp) < 10000;
-      
+
       if (isRecent) {
-        // Pre-fill the input with the pending text
         inputText.value = result.pendingText;
-        outputText.value = ""; // Clear output
+        outputText.value = "";
         updateCharCount();
         copyBtn.disabled = true;
-        
-        // Show visual feedback that text was auto-filled
         showAutoFillFeedback();
-        
-        // Auto-enhance if requested from content script
+        chrome.storage.local.set({ fromWebsite: true });
         if (result.autoEnhance) {
           setTimeout(() => {
-            enhanceText(); // Trigger enhancement automatically
-          }, 500); // Small delay to ensure UI is updated
+            enhanceText();
+          }, 500);
+        } else {
+          replaceBtn.classList.remove("show");
         }
-        
-        // Clear the pending text and flags
         chrome.storage.local.remove(["pendingText", "pendingTimestamp", "autoEnhance"]);
       } else {
-        // Clean up old pending text
         chrome.storage.local.remove(["pendingText", "pendingTimestamp", "autoEnhance"]);
       }
     }
@@ -227,15 +323,10 @@ function checkForPendingText() {
 }
 
 function showAutoFillFeedback() {
-  // Brief visual indication that text was auto-filled from website
   const originalBorderColor = inputText.style.borderColor;
   inputText.style.borderColor = '#10b981';
   inputText.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)';
-  
-  // Focus the input to draw attention
   inputText.focus();
-  
-  // Reset after 2 seconds
   setTimeout(() => {
     inputText.style.borderColor = originalBorderColor;
     inputText.style.boxShadow = '';

@@ -75,7 +75,7 @@ your text pre-filled and automatically enhanced
 
 ### Traditional Method (Extension Popup)
 1. Click the extension icon in Chrome's toolbar
-2. Enter or paste your text (maximum 1000 characters)
+2. Enter or paste your text (maximum 10000 characters)
 3. Configure your enhancement options:
    - Select tone (Neutral or Formal)
    - Choose message type (Message or Email)
