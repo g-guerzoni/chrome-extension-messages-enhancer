@@ -1,0 +1,20 @@
+{
+  "general": {
+    "textInputs": "textarea, input[type=\"text\"], input[type=\"email\"], input:not([type]), [contenteditable=\"true\"]",
+    "messageEnhancerIcons": ".message-enhancer-icon, [title*=\"Message Enhancer\"]"
+  },
+  "platforms": {
+    "teams": {
+      "hostname": "teams.microsoft.com",
+      "inputs": "[role=\"textbox\"][contenteditable=\"true\"], .ck-content"
+    },
+    "slack": {
+      "hostname": "slack.com",
+      "inputs": ".ql-editor, [data-qa=\"message_input\"]"
+    },
+    "gmail": {
+      "hostname": "gmail.com",
+      "inputs": "[contenteditable=\"true\"][role=\"textbox\"], .Am.Al.editable"
+    }
+  }
+}

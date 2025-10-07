@@ -1,0 +1,21 @@
+{
+  "defaultModel": "gpt-5-nano-2025-08-07",
+  "models": [
+    {
+      "id": "gpt-5-nano-2025-08-07",
+      "name": "GPT 5 Nano",
+      "provider": "OpenAI",
+      "max_completion_tokens": 10000,
+      "temperature": 1,
+      "default": true
+    },
+    {
+      "id": "gpt-4.1-nano-2025-04-14",
+      "name": "GPT 4.1 Nano",
+      "provider": "OpenAI",
+      "max_completion_tokens": 10000,
+      "temperature": 1,
+      "default": false
+    }
+  ]
+}

@@ -253,6 +253,12 @@ button:disabled {
   position: relative;
 }
 
+textarea:disabled,
+input:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
 .primary-button:disabled {
   background-color: var(--secondary-text);
   opacity: 0.5;

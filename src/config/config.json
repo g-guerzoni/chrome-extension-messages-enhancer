@@ -1,0 +1,40 @@
+{
+  "api": {
+    "openai": {
+      "endpoint": "https://api.openai.com/v1/chat/completions"
+    }
+  },
+  "limits": {
+    "maxCharacters": 10000,
+    "maxCompletionTokens": 10000,
+    "pendingTextTimeout": 10000
+  },
+  "defaults": {
+    "model": "gpt-5-nano-2025-08-07",
+    "theme": "system",
+    "keepTextOnClose": true,
+    "enableContentScript": true,
+    "debugMode": false
+  },
+  "contentScript": {
+    "blockedPatterns": [
+      "bank",
+      "paypal",
+      "secure",
+      "login",
+      "auth",
+      "admin"
+    ],
+    "iconSettings": {
+      "size": 24,
+      "topOffset": 8,
+      "rightOffset": 8,
+      "zIndex": 999999,
+      "hideDelayMs": 10000,
+      "scanIntervalMs": 2000
+    },
+    "teamsBehavior": {
+      "navigationDelayMs": 1000
+    }
+  }
+}

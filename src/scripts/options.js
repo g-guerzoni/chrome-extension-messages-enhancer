@@ -1,4 +1,5 @@
 const apiKeyInput = document.getElementById("api-key");
+const modelSelect = document.getElementById("model");
 const themeSelect = document.getElementById("theme");
 const keepTextCheckbox = document.getElementById("keep-text");
 const contentScriptCheckbox = document.getElementById("content-script");
@@ -8,9 +9,14 @@ const saveButton = document.getElementById("save-btn");
 const statusDiv = document.getElementById("status");
 const togglePasswordBtn = document.querySelector(".toggle-password");
 
-chrome.storage.sync.get(["openaiApiKey", "theme", "keepTextOnClose", "enableContentScript", "debugMode", "blockedDomains"], (result) => {
+chrome.storage.sync.get(["openaiApiKey", "openaiModel", "theme", "keepTextOnClose", "enableContentScript", "debugMode", "blockedDomains"], (result) => {
   if (result.openaiApiKey) {
     apiKeyInput.value = result.openaiApiKey;
+  }
+  if (result.openaiModel) {
+    modelSelect.value = result.openaiModel;
+  } else {
+    modelSelect.value = "gpt-5-nano-2025-08-07";
   }
   if (result.theme) {
     themeSelect.value = result.theme;
@@ -64,6 +70,7 @@ function validateDomains(domainsString) {
 
 saveButton.addEventListener("click", () => {
   const apiKey = apiKeyInput.value.trim();
+  const model = modelSelect.value;
   const theme = themeSelect.value;
   const keepTextOnClose = keepTextCheckbox.checked;
   const enableContentScript = contentScriptCheckbox.checked;
@@ -88,6 +95,7 @@ saveButton.addEventListener("click", () => {
 
   const settingsToSave = {
     openaiApiKey: apiKey,
+    openaiModel: model,
     theme: theme,
     keepTextOnClose: keepTextOnClose,
     enableContentScript: enableContentScript,

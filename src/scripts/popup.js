@@ -6,6 +6,7 @@ const replaceBtn = document.getElementById("replace-btn");
 const cleanBtn = document.getElementById("clean-btn");
 const settingsBtn = document.getElementById("settings-btn");
 const charCount = document.getElementById("char-count");
+const translateCheckbox = document.getElementById("translate");
 
 function debounce(func, wait) {
   let timeout;
@@ -23,11 +24,20 @@ const debouncedSaveText = debounce(saveTextToStorage, 500);
 
 inputText.addEventListener("input", updateCharCount);
 inputText.addEventListener("input", debouncedSaveText);
+inputText.addEventListener("keydown", handleEnterKey);
 enhanceBtn.addEventListener("click", enhanceText);
 copyBtn.addEventListener("click", copyToClipboard);
 replaceBtn.addEventListener("click", replaceInputWithOutput);
 cleanBtn.addEventListener("click", cleanAllText);
 settingsBtn.addEventListener("click", openSettings);
+translateCheckbox.addEventListener("change", saveTranslateState);
+
+function handleEnterKey(event) {
+  if (event.key === "Enter" && !event.shiftKey) {
+    event.preventDefault();
+    enhanceText();
+  }
+}
 
 function updateCharCount() {
   const count = inputText.value.length;
@@ -184,12 +194,20 @@ async function handleConnectionFailure(text) {
   }
 }
 
+function saveTranslateState() {
+  chrome.storage.sync.set({
+    translateEnabled: translateCheckbox.checked
+  });
+}
+
 function cleanAllText() {
   inputText.value = "";
   outputText.value = "";
   updateCharCount();
   copyBtn.disabled = true;
   replaceBtn.classList.remove("show");
+  translateCheckbox.checked = false;
+  saveTranslateState();
   debouncedSaveText();
 }
 
@@ -218,6 +236,8 @@ function setLoading(isLoading) {
   enhanceBtn.disabled = isLoading;
   enhanceBtn.className = isLoading ? "primary-button loading" : "primary-button";
   inputText.disabled = isLoading;
+  translateCheckbox.disabled = isLoading;
+  cleanBtn.disabled = isLoading;
   document.querySelectorAll('input[type="radio"]').forEach((radio) => {
     radio.disabled = isLoading;
   });
@@ -242,9 +262,13 @@ function checkApiKeyAndUpdateUI() {
 document.addEventListener("DOMContentLoaded", () => {
   copyBtn.disabled = true;
 
-  chrome.storage.sync.get(["theme"], (result) => {
+  chrome.storage.sync.get(["theme", "translateEnabled"], (result) => {
     const theme = result.theme || "system";
     document.documentElement.setAttribute("data-theme", theme);
+
+    if (result.translateEnabled !== undefined) {
+      translateCheckbox.checked = result.translateEnabled;
+    }
   });
 
   chrome.storage.onChanged.addListener((changes) => {

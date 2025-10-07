@@ -1,20 +1,22 @@
 # Message Enhancer Chrome Extension
 
-A Chrome extension that helps improve the tone, clarity, and politeness of your messages using OpenAI's GPT-4.1 Nano API. Perfect for enhancing your Slack, Teams, or email communications with integrated website support for seamless text enhancement.
+A Chrome extension that enhances, corrects, and beautifies your text using OpenAI's GPT-4.1 Nano API. Fix typos, improve clarity, adjust tone, and polish your writing for Slack, Teams, email, and any text input across the web.
 
 ## Features
 
-### Message Enhancement
-- Improve text clarity and readability using GPT-4.1 Nano (use your own key)
-- Fix grammar and punctuation errors
-- Maintain original meaning while enhancing expression
+### Text Enhancement & Correction
+- **Fix typos and spelling errors** automatically
+- **Correct grammar and punctuation** mistakes
+- **Improve clarity and readability** of your writing
+- **Beautify and polish** text while preserving your original meaning
+- Powered by GPT-4.1 Nano (use your own OpenAI API key)
 
 <img width="511" height="608" alt="Screenshot 2025-08-04 at 13 11 22" src="https://github.com/user-attachments/assets/edf431f5-ceaf-4f5a-98ab-ccc42779e5b6" />
 
 ### Website Integration (Grammarly-style)
-- **Enhancement icons appear directly in text inputs** across websites like Teams, Slack, Gmail, and other platforms
-- **One-click enhancement**: Click the sparkles icon to instantly open the extension with 
-your text pre-filled and automatically enhanced
+- **Enhancement icons appear directly in text inputs** across websites like Teams, Slack, Gmail, and any web page
+- **One-click text correction**: Click the sparkles ✨ icon to instantly enhance, correct typos, and beautify your text
+- **Seamless workflow**: Text is automatically filled and enhanced, ready to copy back
 
 <img width="929" height="70" alt="Screenshot 2025-08-04 at 13 20 40" src="https://github.com/user-attachments/assets/f59e7823-a668-4b57-94db-13ea93d0b15d" />
 
@@ -80,19 +82,19 @@ your text pre-filled and automatically enhanced
    - Select tone (Neutral or Formal)
    - Choose message type (Message or Email)
    - Enable translation to English if needed
-4. Click "Enhance Message"
-5. Review the enhanced text in the output area
-6. Click the copy icon to copy the enhanced text to your clipboard
+4. Click "Enhance Message" to correct typos, fix grammar, and beautify your text
+5. Review the enhanced, polished text in the output area
+6. Click the copy icon to copy the corrected text to your clipboard
 
 ### Website Integration Method (New in v2.0)
 1. Navigate to any website with text inputs (Teams, Slack, Gmail, etc.)
 2. Click on a text input and start typing your message
-3. A sparkles icon will appear in the input when it contains text and is focused
+3. A sparkles ✨ icon appears in the input when it contains text
 4. Click the sparkles icon to instantly:
    - Open the extension popup
    - Auto-fill your text from the input
-   - Automatically start the enhancement process
-5. The enhanced text appears in the popup, ready to copy back to your original input
+   - Automatically correct typos, fix grammar, and enhance your text
+5. The corrected and beautified text appears in the popup, ready to copy back
 
 ## Settings
 
@@ -192,10 +194,14 @@ The extension is built with vanilla JavaScript and follows a clean, modular arch
 - Initial release with core message enhancement features
 - Theme support and basic UI
 
+## Author
+
+Guilherme Guerzoni
+
 ## License
 
 MIT License - See LICENSE file for details
 
 ## Keywords
 
-Chrome extension, message enhancer, text improvement, GPT-4.1 Nano, OpenAI, grammar checker, writing assistant, Grammarly alternative, Slack enhancement, Microsoft Teams, Gmail, email enhancement, tone adjustment, text polishing, communication tool, business writing, professional writing, content enhancement, AI writing assistant, text editor, message optimizer, workplace communication, chat enhancement, email formatter, language improvement, writing productivity, text correction, message formatting, content optimization, browser extension, productivity tool, writing tool, communication enhancement, text analysis, automated writing, smart writing, intelligent text processing, workplace productivity, business communication, professional messaging, text refinement, message clarity, writing enhancement, communication optimization
+Chrome extension, message enhancer, text improvement, typo correction, spelling checker, grammar checker, text beautifier, text polisher, GPT-4.1 Nano, OpenAI, writing assistant, Grammarly alternative, Slack enhancement, Microsoft Teams, Gmail, email enhancement, tone adjustment, text correction, communication tool, business writing, professional writing, content enhancement, AI writing assistant, text editor, message optimizer, workplace communication, chat enhancement, email formatter, language improvement, writing productivity, typo fixer, message formatting, content optimization, browser extension, productivity tool, writing tool, communication enhancement, text analysis, automated writing, smart writing, intelligent text processing, workplace productivity, business communication, professional messaging, text refinement, message clarity, writing enhancement, communication optimization
