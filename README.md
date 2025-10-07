@@ -1,4 +1,4 @@
-# Message Enhancer Chrome Extension
+# AI Message Enhancer Chrome Extension
 
 A Chrome extension that enhances, corrects, and beautifies your text using OpenAI's GPT-4.1 Nano API. Fix typos, improve clarity, adjust tone, and polish your writing for Slack, Teams, email, and any text input across the web.
 
@@ -164,7 +164,7 @@ The extension is built with vanilla JavaScript and follows a clean, modular arch
 ### Debugging
 - **Background script logs**: Access via Chrome's extension developer tools
   - Go to `chrome://extensions/`
-  - Find Message Enhancer
+  - Find AI Message Enhancer
   - Click "Service Worker" under "Inspect views"
 - **Popup logs**: Right-click the extension popup and select "Inspect"
 - **Content script logs**: Open browser DevTools on any website and check the Console tab
