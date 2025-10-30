@@ -36,15 +36,25 @@
 
   function isCurrentUrlBlocked() {
     if (!blockedDomains.length) return false;
-    
+
     const currentHost = window.location.hostname.toLowerCase();
+    const currentPort = window.location.port;
     const currentPath = window.location.pathname;
-    const currentUrl = currentHost + currentPath;
-    
+    const currentHostWithPort = currentPort ? `${currentHost}:${currentPort}` : currentHost;
+    const currentUrl = currentHostWithPort + currentPath;
+
     return blockedDomains.some(blocked => {
-      if (blocked.includes("/")) {
+      const hasPort = blocked.includes(":");
+      const hasPath = blocked.includes("/");
+
+      if (hasPath) {
         return currentUrl.startsWith(blocked) || currentUrl === blocked;
       }
+
+      if (hasPort) {
+        return currentHostWithPort === blocked || currentHostWithPort.endsWith("." + blocked);
+      }
+
       return currentHost === blocked || currentHost.endsWith("." + blocked);
     });
   }
@@ -62,19 +72,25 @@
 
   function isValidInput(element) {
     if (!element || processedInputs.has(element)) return false;
-    
+
     const tag = element.tagName.toLowerCase();
     const type = (element.type || '').toLowerCase();
+
     if (tag === 'textarea') return true;
-    if (tag === 'input' && ['text', 'email', ''].includes(type)) return true;
+    if (tag === 'input') {
+      const invalidTypes = ['radio', 'checkbox', 'submit', 'button', 'reset', 'file', 'hidden', 'image', 'color', 'range', 'date', 'datetime-local', 'month', 'time', 'week', 'number'];
+      if (invalidTypes.includes(type)) return false;
+      if (['text', 'email', 'search', 'url', 'tel', ''].includes(type)) return true;
+      return false;
+    }
     if (element.contentEditable === 'true') return true;
 
     if (element.disabled || element.readOnly) return false;
     const name = (element.name || '').toLowerCase();
     const id = (element.id || '').toLowerCase();
     if (name.includes('password') || id.includes('password')) return false;
-    
-    return true;
+
+    return false;
   }
 
   function getInputText(element) {

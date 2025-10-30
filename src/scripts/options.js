@@ -8,6 +8,10 @@ const blockedDomainsTextarea = document.getElementById("blocked-domains");
 const saveButton = document.getElementById("save-btn");
 const statusDiv = document.getElementById("status");
 const togglePasswordBtn = document.querySelector(".toggle-password");
+const versionSpan = document.getElementById("version");
+
+const manifest = chrome.runtime.getManifest();
+versionSpan.textContent = `v${manifest.version}`;
 
 chrome.storage.sync.get(["openaiApiKey", "openaiModel", "theme", "keepTextOnClose", "enableContentScript", "debugMode", "blockedDomains"], (result) => {
   if (result.openaiApiKey) {
@@ -58,7 +62,7 @@ function validateDomains(domainsString) {
       return;
     }
     
-    if (domain.match(/^[a-zA-Z0-9]([a-zA-Z0-9\-\.\/]*[a-zA-Z0-9\/])?$/)) {
+    if (domain.match(/^[a-zA-Z0-9]([a-zA-Z0-9\-\.\/:]*[a-zA-Z0-9\/])?$/)) {
       validDomains.push(domain);
     } else {
       errors.push(`"${domain}" - Invalid domain format`);

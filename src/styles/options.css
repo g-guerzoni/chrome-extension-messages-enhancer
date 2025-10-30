@@ -13,6 +13,12 @@ h1 {
     font-size: 1.25rem;
 }
 
+.version-text {
+    font-size: 0.5em;
+    font-weight: normal;
+    color: var(--secondary-text);
+}
+
 .form-group {
     margin-bottom: 1rem;
 }

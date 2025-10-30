@@ -10,7 +10,7 @@
 </head>
 <body>
     <main>
-        <h1>AI Message Enhancer Settings</h1>
+        <h1>AI Message Enhancer Settings <span id="version" class="version-text"></span></h1>
 
         <div class="form-group">
         <label for="api-key">OpenAI API Key</label>
@@ -79,7 +79,7 @@
             placeholder="Enter domains to block, separated by commas (e.g., github.com, twitter.com/compose, facebook.com)"
             rows="3"
         ></textarea>
-        <p class="help-text">Enhancement icons will be hidden on these domains. Use full domains (github.com) to block entire sites, or include paths (github.com/user/repo) to block specific pages only.</p>
+        <p class="help-text">Enhancement icons will be hidden on these domains. Use full domains (github.com) to block entire sites, include paths (github.com/user/repo) to block specific pages, or specify ports (localhost:3000) for local development.</p>
     </div>
 
         <button id="save-btn" aria-label="Save all settings">Save Settings</button>

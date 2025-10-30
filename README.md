@@ -181,13 +181,24 @@ The extension is built with vanilla JavaScript and follows a clean, modular arch
 
 ## Version History
 
-### v2.1.0 (Current)
+### v2.4.2 (Current)
+- Added version display in settings page header
+- Improved content script input validation to exclude more input types (radio, checkbox, file, etc.)
+- Enhanced input type filtering to support search, url, and tel inputs
+
+### v2.1.0
 - Added domain blocking feature to disable enhancement icons on specific websites
 - Fixed content script initialization timing issues
-- Improved options page UI styling
+- Fixed missing CSS styles for textarea and checkbox labels in options page
+- Improved domain validation and Chrome storage sync integration
+- Added debug logging for troubleshooting
 
 ### v2.0.0
 - Enhancement text icon (✨) now appear directly in text inputs across websites like Teams, Slack, Gmail and others
+- Enhanced text input detection with floating icons
+- Support for major platforms (Gmail, Slack, Teams, etc.)
+- Theme management and settings persistence
+- Content script with website integration capabilities
 
 ### v1.1.0
 - Updated to GPT-4.1 Nano model
