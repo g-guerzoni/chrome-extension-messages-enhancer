@@ -13,6 +13,12 @@ const statusDiv = document.getElementById("status");
 
 const { config, models } = await loadConfig();
 const apiKeyInputs = {};
+const apiKeyLabels = {};
+// Rough per-message cost: the system prompt plus a short message in, a similar message out.
+const TYPICAL_TOKENS = { input: 1500, output: 150 };
+
+let statusTimer = null;
+let dirty = false;
 
 document.getElementById("version").textContent = `v${chrome.runtime.getManifest().version}`;
 
@@ -46,12 +52,17 @@ function renderApiKeyFields() {
     const toggle = document.createElement("button");
     toggle.type = "button";
     toggle.className = "toggle-password";
-    toggle.title = toggle.ariaLabel = "Toggle key visibility";
+    toggle.title = "Show key";
+    toggle.setAttribute("aria-pressed", "false");
     toggle.innerHTML = '<span class="material-icons" aria-hidden="true">visibility_off</span>';
     toggle.addEventListener("click", () => {
-      input.type = input.type === "password" ? "text" : "password";
-      toggle.firstChild.textContent = input.type === "password" ? "visibility_off" : "visibility";
+      const hidden = input.type === "text";
+      input.type = hidden ? "password" : "text";
+      toggle.title = hidden ? "Show key" : "Hide key";
+      toggle.setAttribute("aria-pressed", String(!hidden));
+      toggle.firstChild.textContent = hidden ? "visibility_off" : "visibility";
     });
+    input.addEventListener("input", () => input.removeAttribute("aria-invalid"));
     wrapper.append(input, toggle);
 
     const help = document.createElement("p");
@@ -66,6 +77,7 @@ function renderApiKeyFields() {
     group.append(label, wrapper, help);
     apiKeysContainer.append(group);
     apiKeyInputs[providerId] = input;
+    apiKeyLabels[providerId] = label;
   }
 }
 
@@ -75,9 +87,15 @@ function selectedModel() {
 
 function updateModelHelp() {
   const model = selectedModel();
-  modelHelp.textContent = [model.note, formatPrice(model.pricing)].filter(Boolean).join(" · ");
+  const { input, output } = model.pricing;
+  const messagesPerDollar = Math.round(1e6 / (TYPICAL_TOKENS.input * input + TYPICAL_TOKENS.output * output));
+  const estimate = `about ${messagesPerDollar.toLocaleString("en-US")} messages per $1`;
+
+  modelHelp.textContent = [model.note, formatPrice(model.pricing), estimate].filter(Boolean).join(" · ");
   for (const [providerId, input] of Object.entries(apiKeyInputs)) {
-    input.required = providerId === model.provider;
+    const needed = providerId === model.provider;
+    input.required = needed;
+    apiKeyLabels[providerId].textContent = `${config.providers[providerId].name} API Key ${needed ? "(required for this model)" : "(optional)"}`;
   }
 }
 
@@ -94,10 +112,24 @@ function validateDomains(domainsString) {
   return errors;
 }
 
+// Errors stay visible until the next save attempt; only success messages fade out.
 function showStatus(message, type) {
+  clearTimeout(statusTimer);
   statusDiv.textContent = message;
   statusDiv.className = `status ${type}`;
-  setTimeout(() => (statusDiv.className = "status"), 3000);
+  if (type === "success") statusTimer = setTimeout(() => (statusDiv.className = "status"), 3000);
+}
+
+function setDirty(value) {
+  dirty = value;
+  saveButton.textContent = value ? "Save changes •" : "Save Settings";
+}
+
+function rejectKey(providerId, message) {
+  const input = apiKeyInputs[providerId];
+  input.setAttribute("aria-invalid", "true");
+  input.focus();
+  showStatus(message, "error");
 }
 
 async function loadSettings() {
@@ -128,14 +160,14 @@ async function saveSettings() {
     const provider = config.providers[providerId];
     if (!key) continue;
     if (!key.startsWith(provider.keyPrefix) || key.length < 20) {
-      showStatus(`Invalid ${provider.name} API key. It should start with "${provider.keyPrefix}".`, "error");
+      rejectKey(providerId, `Invalid ${provider.name} API key. It should start with "${provider.keyPrefix}".`);
       return;
     }
     apiKeys[providerId] = key;
   }
 
   if (!apiKeys[model.provider]) {
-    showStatus(`${model.name} needs a ${config.providers[model.provider].name} API key.`, "error");
+    rejectKey(model.provider, `${model.name} needs an API key from ${config.providers[model.provider].name}.`);
     return;
   }
 
@@ -159,7 +191,8 @@ async function saveSettings() {
       }),
       keepTextCheckbox.checked || chrome.storage.local.remove(["persistedInputText", "persistedOutputText"]),
     ]);
-    showStatus("Settings saved successfully!", "success");
+    setDirty(false);
+    showStatus("Settings saved.", "success");
   } catch (error) {
     showStatus(`Error saving settings: ${error.message}`, "error");
   }
@@ -170,4 +203,8 @@ renderApiKeyFields();
 modelSelect.addEventListener("change", updateModelHelp);
 themeSelect.addEventListener("change", () => applyTheme(themeSelect.value));
 saveButton.addEventListener("click", saveSettings);
+document.querySelector("main").addEventListener("input", () => setDirty(true));
+addEventListener("beforeunload", (event) => {
+  if (dirty) event.preventDefault();
+});
 loadSettings();

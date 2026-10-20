@@ -92,6 +92,7 @@ button:focus-visible {
 }
 
 .toggle-password:hover {
+    background: none;
     color: var(--text-color);
 }
 
@@ -126,17 +127,17 @@ button:hover {
 .status.success {
     display: block;
     background-color: rgba(16, 185, 129, 0.1);
-    color: var(--success-color);
+    color: var(--success-text);
 }
 
 .status.error {
     display: block;
     background-color: rgba(239, 68, 68, 0.1);
-    color: var(--error-color);
+    color: var(--error-text);
 }
 
 .help-text a {
-    color: var(--primary-color);
+    color: var(--link-color);
 }
 
 .help-text {
