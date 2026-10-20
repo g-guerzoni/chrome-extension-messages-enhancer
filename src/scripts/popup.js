@@ -1,218 +1,155 @@
+import { loadConfig, getActiveModel, getApiKeys, getPrefs, initTheme, setIcon, hasDataConsent } from "./shared.js";
+
 const inputText = document.getElementById("input-text");
 const outputText = document.getElementById("output-text");
 const enhanceBtn = document.getElementById("enhance-btn");
 const copyBtn = document.getElementById("copy-btn");
-const replaceBtn = document.getElementById("replace-btn");
 const cleanBtn = document.getElementById("clean-btn");
 const settingsBtn = document.getElementById("settings-btn");
 const charCount = document.getElementById("char-count");
+const charLimit = document.getElementById("char-limit");
 const translateCheckbox = document.getElementById("translate");
+const optionInputs = document.querySelectorAll(".options-section input");
+const errorMessage = document.getElementById("error-message");
 const statusAnnouncer = document.getElementById("status-announcer");
+const modelName = document.getElementById("model-name");
+const shortcutHint = document.getElementById("shortcut-hint");
+const setupNotice = document.getElementById("setup-notice");
+const setupMessage = document.getElementById("setup-message");
+const setupKey = document.getElementById("setup-key");
+const setupKeyLink = document.getElementById("setup-key-link");
+const buttonText = enhanceBtn.querySelector(".button-text");
 
-function announceToScreenReader(message) {
-  if (statusAnnouncer) {
-    statusAnnouncer.textContent = message;
-    setTimeout(() => {
-      statusAnnouncer.textContent = "";
-    }, 1000);
-  }
-}
+let keepTextOnClose = true;
 
 function debounce(func, wait) {
   let timeout;
-  return function executedFunction(...args) {
-    const later = () => {
-      clearTimeout(timeout);
-      func(...args);
-    };
+  return (...args) => {
     clearTimeout(timeout);
-    timeout = setTimeout(later, wait);
+    timeout = setTimeout(() => func(...args), wait);
   };
 }
 
-const debouncedSaveText = debounce(saveTextToStorage, 500);
+const debouncedSaveText = debounce(saveText, 500);
 
-inputText.addEventListener("input", updateCharCount);
-inputText.addEventListener("input", debouncedSaveText);
-inputText.addEventListener("keydown", handleEnterKey);
-enhanceBtn.addEventListener("click", enhanceText);
-copyBtn.addEventListener("click", copyToClipboard);
-replaceBtn.addEventListener("click", replaceInputWithOutput);
-cleanBtn.addEventListener("click", cleanAllText);
-settingsBtn.addEventListener("click", openSettings);
-translateCheckbox.addEventListener("change", saveTranslateState);
-
-function handleEnterKey(event) {
+inputText.addEventListener("input", () => {
+  updateCharCount();
+  hideError();
+  debouncedSaveText();
+});
+inputText.addEventListener("keydown", (event) => {
+  // Enter also confirms IME candidates (e.g. Japanese, Chinese); don't treat that as "enhance".
+  if (event.isComposing || event.keyCode === 229) return;
   if (event.key === "Enter" && !event.shiftKey) {
     event.preventDefault();
-    enhanceText();
+    if (!enhanceBtn.disabled) enhanceText();
   }
+});
+enhanceBtn.addEventListener("click", enhanceText);
+copyBtn.addEventListener("click", copyToClipboard);
+cleanBtn.addEventListener("click", cleanAllText);
+settingsBtn.addEventListener("click", () => chrome.runtime.openOptionsPage());
+document.getElementById("setup-settings").addEventListener("click", () => chrome.runtime.openOptionsPage());
+optionInputs.forEach((input) => input.addEventListener("change", savePrefs));
+
+function announce(message) {
+  statusAnnouncer.textContent = message;
+  setTimeout(() => (statusAnnouncer.textContent = ""), 1000);
+}
+
+// Errors stay until the user edits the text or runs again, so they can be read.
+function showError(message) {
+  errorMessage.textContent = message;
+  errorMessage.style.display = "block";
+}
+
+function hideError() {
+  errorMessage.style.display = "none";
 }
 
 function updateCharCount() {
-  const count = inputText.value.length;
-  charCount.textContent = count;
-
-  if (count > 10000) {
-    inputText.value = inputText.value.slice(0, 10000);
-    charCount.textContent = "10000";
-  }
+  charCount.textContent = inputText.value.length;
 }
 
-async function enhanceText() {
-  const text = inputText.value.trim();
+function readPrefs() {
+  return {
+    tone: document.querySelector('input[name="tone"]:checked').value,
+    type: document.querySelector('input[name="type"]:checked').value,
+    translate: translateCheckbox.checked,
+  };
+}
 
+function writePrefs({ tone, type, translate }) {
+  for (const [name, value] of [["tone", tone], ["type", type]]) {
+    const radio = document.querySelector(`input[name="${name}"][value="${value}"]`);
+    if (radio) radio.checked = true;
+  }
+  translateCheckbox.checked = translate;
+}
+
+// The in-page icon, keyboard shortcut and context menu reuse the options picked here.
+function savePrefs() {
+  chrome.storage.sync.set({ prefs: readPrefs() });
+}
+
+function enhanceText() {
+  if (enhanceBtn.classList.contains("loading")) return;
+  hideError();
+
+  const text = inputText.value.trim();
   if (!text) {
     showError("Please enter some text to enhance.");
     return;
   }
 
-  const tone = document.querySelector('input[name="tone"]:checked').value;
-  const type = document.querySelector('input[name="type"]:checked').value;
-  const translate = document.querySelector("#translate").checked;
-
   setLoading(true);
+  copyBtn.disabled = true;
+  let receivedDelta = false;
+  let finished = false;
 
-  try {
-    const response = await chrome.runtime.sendMessage({
-      action: "enhanceText",
-      data: { text, tone, type, translate },
-    });
-
-    if (response.error) {
-      throw new Error(response.error);
+  const port = chrome.runtime.connect({ name: "enhance" });
+  port.onMessage.addListener((message) => {
+    if (message.delta) {
+      // Clear only once text arrives, so a failed retry keeps the previous result.
+      if (!receivedDelta) outputText.value = "";
+      receivedDelta = true;
+      outputText.value += message.delta;
+      outputText.scrollTop = outputText.scrollHeight;
+      return;
     }
 
-    outputText.value = response.enhancedText;
-    copyBtn.disabled = false;
-    announceToScreenReader("Text enhancement complete");
-    chrome.storage.local.get(["fromWebsite"], (result) => {
-      if (result.fromWebsite) {
-        replaceBtn.classList.add("show");
-      }
-    });
-
-    saveTextToStorage();
-  } catch (error) {
-    showError(error.message);
-  } finally {
+    if (message.error) {
+      showError(message.error);
+      copyBtn.disabled = !outputText.value;
+    } else {
+      outputText.value = message.text;
+      outputText.scrollTop = 0;
+      copyBtn.disabled = false;
+      announce("Text enhancement complete");
+      saveText();
+    }
+    finished = true;
     setLoading(false);
-  }
+    port.disconnect();
+  });
+  port.onDisconnect.addListener(() => {
+    if (!finished) showError("Lost the connection to the extension. Please try again.");
+    setLoading(false);
+  });
+  port.postMessage({ text, ...readPrefs() });
 }
 
 async function copyToClipboard() {
-  const text = outputText.value;
-
-  if (!text) return;
+  if (!outputText.value) return;
 
   try {
-    await navigator.clipboard.writeText(text);
-
-    copyBtn.innerHTML = '<span class="material-icons" aria-hidden="true">check</span>';
-    copyBtn.setAttribute("aria-label", "Text copied to clipboard");
-    announceToScreenReader("Text copied to clipboard");
-    setTimeout(() => {
-      copyBtn.innerHTML = '<span class="material-icons" aria-hidden="true">content_copy</span>';
-      copyBtn.setAttribute("aria-label", "Copy enhanced text to clipboard");
-    }, 2000);
-  } catch (error) {
-    showError("Failed to copy text to clipboard");
+    await navigator.clipboard.writeText(outputText.value);
+    setIcon(copyBtn, "check");
+    announce("Text copied to clipboard");
+    setTimeout(() => setIcon(copyBtn, "content_copy"), 2000);
+  } catch {
+    showError("Failed to copy text to clipboard.");
   }
-}
-
-async function replaceInputWithOutput() {
-  const enhancedText = outputText.value;
-
-  if (!enhancedText) return;
-
-  try {
-    const tabs = await chrome.tabs.query({active: true, currentWindow: true});
-    if (!tabs[0]) {
-      showError("No active tab found");
-      return;
-    }
-
-    const tabId = tabs[0].id;
-    const connectionHealthy = await checkContentScriptConnection(tabId);
-
-    if (!connectionHealthy) {
-      await handleConnectionFailure(enhancedText);
-      return;
-    }
-
-    const success = await replaceTextWithRetry(tabId, enhancedText, 3);
-
-    if (success) {
-      inputText.value = "";
-      outputText.value = "";
-      updateCharCount();
-      copyBtn.disabled = true;
-      replaceBtn.classList.remove("show");
-      announceToScreenReader("Text replaced successfully");
-      debouncedSaveText();
-    } else {
-      await handleConnectionFailure(enhancedText);
-    }
-  } catch (error) {
-    showError("Error accessing tab: " + error.message);
-  }
-}
-
-async function checkContentScriptConnection(tabId, timeoutMs = 2000) {
-  try {
-    const response = await Promise.race([
-      chrome.tabs.sendMessage(tabId, { action: "ping" }),
-      new Promise((_, reject) => 
-        setTimeout(() => reject(new Error("timeout")), timeoutMs)
-      )
-    ]);
-    return response && response.pong === true;
-  } catch (error) {
-    return false;
-  }
-}
-
-async function replaceTextWithRetry(tabId, text, maxRetries) {
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    try {
-      const response = await chrome.tabs.sendMessage(tabId, {
-        action: "replaceText",
-        text: text
-      });
-      
-      if (response && response.success) {
-        return true;
-      }
-
-      if (attempt < maxRetries) {
-        await new Promise(resolve => setTimeout(resolve, attempt * 500));
-      }
-    } catch (error) {
-      if (attempt === maxRetries) {
-        console.error("Final retry failed:", error.message);
-      }
-    }
-  }
-  return false;
-}
-
-async function handleConnectionFailure(text) {
-  try {
-    await navigator.clipboard.writeText(text);
-    showError("Connection lost. Text copied to clipboard - please paste manually into the input field.");
-    copyBtn.innerHTML = '<span class="material-icons">check</span>';
-    setTimeout(() => {
-      copyBtn.innerHTML = '<span class="material-icons">content_copy</span>';
-    }, 3000);
-  } catch (clipboardError) {
-    showError("Connection failed and could not copy to clipboard. Please copy the enhanced text manually from the output field.");
-  }
-}
-
-function saveTranslateState() {
-  chrome.storage.sync.set({
-    translateEnabled: translateCheckbox.checked
-  });
 }
 
 function cleanAllText() {
@@ -220,159 +157,85 @@ function cleanAllText() {
   outputText.value = "";
   updateCharCount();
   copyBtn.disabled = true;
-  replaceBtn.classList.remove("show");
-  translateCheckbox.checked = false;
-  saveTranslateState();
-  debouncedSaveText();
-}
-
-function openSettings() {
-  chrome.runtime.openOptionsPage();
-}
-
-function showError(message) {
-  let errorDiv = document.querySelector(".error-message");
-  if (!errorDiv) {
-    errorDiv = document.createElement("div");
-    errorDiv.className = "error-message";
-    const optionsSection = document.querySelector(".options-section");
-    optionsSection.parentNode.insertBefore(errorDiv, optionsSection.nextSibling);
-  }
-
-  errorDiv.textContent = message;
-  errorDiv.style.display = "block";
-
-  setTimeout(() => {
-    errorDiv.style.display = "none";
-  }, 3000);
+  hideError();
+  saveText();
+  inputText.focus();
 }
 
 function setLoading(isLoading) {
   enhanceBtn.disabled = isLoading;
-  enhanceBtn.className = isLoading ? "primary-button loading" : "primary-button";
-  enhanceBtn.setAttribute("aria-busy", isLoading ? "true" : "false");
-  inputText.disabled = isLoading;
-  translateCheckbox.disabled = isLoading;
+  enhanceBtn.classList.toggle("loading", isLoading);
+  enhanceBtn.setAttribute("aria-busy", String(isLoading));
+  buttonText.textContent = isLoading ? "Enhancing…" : "Enhance";
+  // readOnly instead of disabled keeps focus in the textarea for the next Enter.
+  inputText.readOnly = isLoading;
   cleanBtn.disabled = isLoading;
-  document.querySelectorAll('input[type="radio"]').forEach((radio) => {
-    radio.disabled = isLoading;
-  });
-
-  if (isLoading) {
-    announceToScreenReader("Processing your text, please wait");
-  }
+  optionInputs.forEach((input) => (input.disabled = isLoading));
+  if (isLoading) announce("Processing your text, please wait");
+  else refreshModelStatus();
 }
 
-function checkApiKeyAndUpdateUI() {
-  chrome.storage.sync.get(["openaiApiKey"], (result) => {
-    const hasApiKey = result.openaiApiKey && result.openaiApiKey.trim().length > 0;
-
-    enhanceBtn.disabled = !hasApiKey;
-    enhanceBtn.title = hasApiKey ? "Enhance Message" : "Please set your API key in settings";
-
-    if (!hasApiKey) {
-      showError("Please set your OpenAI API key in the extension settings.");
-      settingsBtn.style.animation = "pulse 2s infinite";
-    } else {
-      settingsBtn.style.animation = "";
-    }
-  });
+function saveText() {
+  if (!keepTextOnClose) return;
+  chrome.storage.local.set({ persistedInputText: inputText.value, persistedOutputText: outputText.value });
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  copyBtn.disabled = true;
+async function loadText() {
+  const { persistedInputText = "", persistedOutputText = "" } = await chrome.storage.local.get([
+    "persistedInputText",
+    "persistedOutputText",
+  ]);
+  inputText.value = persistedInputText;
+  outputText.value = persistedOutputText;
+  updateCharCount();
+  copyBtn.disabled = !outputText.value;
+}
 
-  chrome.storage.sync.get(["theme", "translateEnabled"], (result) => {
-    const theme = result.theme || "system";
-    document.documentElement.setAttribute("data-theme", theme);
+async function refreshModelStatus() {
+  const [model, apiKeys, { config }, consent] = await Promise.all([
+    getActiveModel(),
+    getApiKeys(),
+    loadConfig(),
+    hasDataConsent(),
+  ]);
+  const hasApiKey = Boolean(apiKeys[model.provider]);
+  const provider = config.providers[model.provider];
 
-    if (result.translateEnabled !== undefined) {
-      translateCheckbox.checked = result.translateEnabled;
-    }
-  });
+  modelName.textContent = `${provider.name} (${model.name})`;
+  enhanceBtn.disabled = !hasApiKey || !consent;
+  setupNotice.hidden = hasApiKey && consent;
+  // Consent comes first; the key link only helps once that is done.
+  setupMessage.textContent = consent ? `Add your ${provider.name} API key to start.` : "Review how your text is handled to start.";
+  setupKey.hidden = !consent;
+  setupKeyLink.href = provider.keyUrl;
+}
+
+async function init() {
+  initTheme();
+
+  const [{ config }, prefs, settings, commands] = await Promise.all([
+    loadConfig(),
+    getPrefs(),
+    chrome.storage.sync.get("keepTextOnClose"),
+    chrome.commands.getAll(),
+  ]);
+
+  inputText.maxLength = config.limits.maxCharacters;
+  charLimit.textContent = config.limits.maxCharacters;
+  writePrefs(prefs);
+
+  const shortcut = commands.find((c) => c.name === "enhance-field")?.shortcut;
+  if (shortcut) shortcutHint.textContent = ` · ${shortcut} enhances any text field`;
+
+  keepTextOnClose = settings.keepTextOnClose !== false;
+  if (keepTextOnClose) await loadText();
 
   chrome.storage.onChanged.addListener((changes) => {
-    if (changes.theme) {
-      document.documentElement.setAttribute("data-theme", changes.theme.newValue);
-    }
-    if (changes.openaiApiKey) {
-      checkApiKeyAndUpdateUI();
-    }
-    if (changes.keepTextOnClose && !changes.keepTextOnClose.newValue) {
-      inputText.value = "";
-      outputText.value = "";
-      updateCharCount();
-      copyBtn.disabled = true;
-      replaceBtn.classList.remove("show");
-    }
+    if (changes.apiKeys || changes.model || changes.dataConsent) refreshModelStatus();
+    if (changes.keepTextOnClose) keepTextOnClose = changes.keepTextOnClose.newValue !== false;
   });
 
-  checkApiKeyAndUpdateUI();
-  loadPersistedText();
-  checkForPendingText();
-});
-
-// Clear website flag when popup closes
-window.addEventListener("beforeunload", () => {
-  chrome.storage.local.remove(["fromWebsite"]);
-});
-
-function saveTextToStorage() {
-  chrome.storage.sync.get(["keepTextOnClose"], (result) => {
-    if (result.keepTextOnClose !== false) {
-      chrome.storage.sync.set({
-        persistedInputText: inputText.value,
-        persistedOutputText: outputText.value,
-      });
-    }
-  });
+  await refreshModelStatus();
 }
 
-function loadPersistedText() {
-  chrome.storage.sync.get(["keepTextOnClose", "persistedInputText", "persistedOutputText"], (result) => {
-    if (result.keepTextOnClose !== false) {
-      inputText.value = result.persistedInputText || "";
-      outputText.value = result.persistedOutputText || "";
-      updateCharCount();
-      copyBtn.disabled = !outputText.value;
-    }
-  });
-}
-
-function checkForPendingText() {
-  chrome.storage.local.get(["pendingText", "pendingTimestamp", "autoEnhance"], (result) => {
-    if (result.pendingText && result.pendingTimestamp) {
-      const isRecent = (Date.now() - result.pendingTimestamp) < 10000;
-
-      if (isRecent) {
-        inputText.value = result.pendingText;
-        outputText.value = "";
-        updateCharCount();
-        copyBtn.disabled = true;
-        showAutoFillFeedback();
-        chrome.storage.local.set({ fromWebsite: true });
-        if (result.autoEnhance) {
-          setTimeout(() => {
-            enhanceText();
-          }, 500);
-        } else {
-          replaceBtn.classList.remove("show");
-        }
-        chrome.storage.local.remove(["pendingText", "pendingTimestamp", "autoEnhance"]);
-      } else {
-        chrome.storage.local.remove(["pendingText", "pendingTimestamp", "autoEnhance"]);
-      }
-    }
-  });
-}
-
-function showAutoFillFeedback() {
-  const originalBorderColor = inputText.style.borderColor;
-  inputText.style.borderColor = '#10b981';
-  inputText.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)';
-  inputText.focus();
-  setTimeout(() => {
-    inputText.style.borderColor = originalBorderColor;
-    inputText.style.boxShadow = '';
-  }, 2000);
-}
+init();

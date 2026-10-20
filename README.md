@@ -1,6 +1,6 @@
 # AI Message Enhancer Chrome Extension
 
-A Chrome extension that enhances, corrects, and beautifies your text using OpenAI's GPT Nano API. Fix typos, improve clarity, adjust tone, and polish your writing for Slack, Teams, email, and any text input across the web.
+A Chrome extension that enhances, corrects, and beautifies your text using fast, low-cost AI models through OpenRouter: Grok 4.3 by default, or any other OpenRouter model. Fix typos, improve clarity, adjust tone, and polish your writing for Slack, Teams, email, and any text input across the web.
 
 ## Features
 
@@ -9,26 +9,32 @@ A Chrome extension that enhances, corrects, and beautifies your text using OpenA
 - **Correct grammar and punctuation** mistakes
 - **Improve clarity and readability** of your writing
 - **Beautify and polish** text while preserving your original meaning
-- Powered by GPT (use your own OpenAI API key)
+- Bring your own OpenRouter key; Grok 4.3 by default, or type any OpenRouter model ID
+- Responses stream in as they are generated
 
-<img width="509" height="604" alt="image" src="https://github.com/user-attachments/assets/e080ca0a-d7ff-4488-af7c-781c6149b0b5" />
+<img src="docs/screenshots/popup.png" width="500" alt="Popup with the original text, tone, message type and translation options, the enhanced text and where the text is sent" />
 
-### Website Integration (Grammarly-style)
-- **Enhancement icons appear directly in text inputs** across websites like Teams, Slack, Gmail, and any web page
-- **One-click text correction**: Click the sparkles ✨ icon to instantly enhance, correct typos, and beautify your text
-- **Seamless workflow**: Text is automatically filled and enhanced, ready to copy back
+### Website Integration
+- **✨ Enhance button** on message boxes across websites like Teams, Slack, Gmail and Outlook. It sits on the field's border and moves out of the way of the site's own buttons
+- **Review before replacing**: the enhanced text streams into a small preview next to the field. Nothing in the page changes until you press **Replace** (or Ctrl+Enter); **Show changes** highlights what was edited
+- **Tone, type and translation per site**: Neutral or Formal, Message or Email (Gmail and Outlook start as Email), and translate to English, remembered for each site
+- **Selection support**: select part of the text to rewrite only that part and keep @mentions and formatting elsewhere
+- **Undo**: one click, or Ctrl+Z, puts the previous text back with its formatting
+- **Mail aware**: in Gmail and Outlook, your signature and the quoted thread are never sent or rewritten
+- **Keyboard shortcut**: `Alt+Shift+E` opens the preview for the focused field (change it in settings)
+- **Right-click menu**: "Enhance with AI Message Enhancer…" on any editable field
 
-<img width="929" height="70" alt="Screenshot 2025-08-04 at 13 20 40" src="https://github.com/user-attachments/assets/f59e7823-a668-4b57-94db-13ea93d0b15d" />
+<img src="docs/screenshots/in-place.png" width="1040" alt="A chat message box with the Enhance button above it and the preview showing the changes, with Replace, Copy and Retry" />
 
 ### Settings
 
-<img width="553" height="742" alt="image" src="https://github.com/user-attachments/assets/33a46d48-d109-4b44-a58b-2e60f06a9a7a" />
+<img src="docs/screenshots/settings.png" width="640" alt="Settings page with the data notice, model, API keys, theme, where to show the Enhance button, keyboard shortcut and blocked domains" />
 
 ### Language & Translation
 - **Automatic language detection** for any input text
 - **Optional translation to English** from the original language
 - Preserves original meaning and context during translation
-- Works with any input language supported by GPT-4.1 Nano
+- Works with any input language supported by the selected model
 
 ### Message Customization
 - Multiple tone options:
@@ -58,21 +64,15 @@ A Chrome extension that enhances, corrects, and beautifies your text using OpenA
    cd chrome-extension-messages-enhancer
    ```
 
-2. Install dependencies and generate icons:
-   ```bash
-   npm install
-   npm run generate-icons
-   ```
-
-3. Load the extension in Chrome:
+2. Load the extension in Chrome (there is no build step):
    - Open Chrome and navigate to `chrome://extensions/`
    - Enable "Developer mode" in the top right corner
    - Click "Load unpacked" and select the extension directory
 
-4. Configure the extension:
+3. Configure the extension:
    - Click the extension icon in Chrome's toolbar
    - Click the "Settings" button (gear icon)
-   - Enter your OpenAI API key
+   - Pick a model, enter your OpenRouter API key and press **Test connection**
    - Select your preferred theme
    - Configure website integration settings
    - Click "Save Settings"
@@ -90,33 +90,44 @@ A Chrome extension that enhances, corrects, and beautifies your text using OpenA
 5. Review the enhanced, polished text in the output area
 6. Click the copy icon to copy the corrected text to your clipboard
 
-### Website Integration Method (New in v2.0)
-1. Navigate to any website with text inputs (Teams, Slack, Gmail, etc.)
-2. Click on a text input and start typing your message
-3. A sparkles ✨ icon appears in the input when it contains text
-4. Click the sparkles icon to instantly:
-   - Open the extension popup
-   - Auto-fill your text from the input
-   - Automatically correct typos, fix grammar, and enhance your text
-5. The corrected and beautified text appears in the popup, ready to copy back
+### Website Integration Method
+1. Type your message in a message box (Teams, Slack, Gmail, Outlook or any site)
+2. Click **✨ Enhance** on the field's border, press `Alt+Shift+E`, or right-click and choose "Enhance with AI Message Enhancer…"
+3. Review the enhanced text in the preview; change the tone, type or translation if you like
+4. Press **Replace** (or Ctrl+Enter) to put it in the field, or Esc to close without changes
+5. Changed your mind? Click **Undo** next to the button or press Ctrl+Z
 
 ## Settings
 
 ### API Configuration
-- **OpenAI API Key** (Required for the extension to work)
-- The extension stores your API key securely in Chrome's local storage
-- Your API key never leaves your browser and is not transmitted anywhere except to OpenAI's servers
+- **Model**: Grok 4.3 (recommended), or "Other OpenRouter model…" to type any model ID from [openrouter.ai/models](https://openrouter.ai/models)
+- **Data notice**: shown on install and on upgrade from v2. Nothing is sent to an AI provider until you press OK
+- **API key**: an OpenRouter key (`sk-or-...`)
+- **Test connection**: sends a tiny request with the model and key in the form (saved or not) and reports the result
+- API keys and the selected model are stored in Chrome's local storage on this device only (not synced to your Google account)
+- Your API key is only sent to the provider of the selected model
+
+### Models
+
+| Model | Price (input / output per 1M tokens) | Notes |
+| --- | --- | --- |
+| Grok 4.3 (`x-ai/grok-4.3`) | $1.25 / $2.50 | Default. xAI's replacement for Grok 4.1 Fast; reasoning is turned off for speed |
+| Any OpenRouter model | See [openrouter.ai/models](https://openrouter.ai/models) | Type its ID, e.g. `google/gemini-3.1-flash-lite` |
+
+If a model refuses to turn reasoning off or to stream, the request is retried without that option. To compare candidates on cost, speed and quality with the extension's real prompt, run `OPENROUTER_API_KEY=sk-or-... node tools/compare-models.mjs`. Models are configured in `src/config/model.json`.
 
 ### User Preferences
 - **Theme Selection**: Choose between System, Light, or Dark mode
 - **Keep Text on Close**: Automatically save and restore your text between sessions
-- **Website Integration**: Enable or disable the Grammarly-style icons on websites
-- **Domain Blocking**: Block enhancement icons on specific domains or pages (e.g., `github.com`, `twitter.com/compose`)
+- **Website Integration**: show the ✨ Enhance button on multi-line fields, only on Slack, Teams, Gmail and Outlook, or never
+- **Keyboard shortcut**: see the current shortcut and change it
+- **Domain Blocking**: hide the ✨ Enhance button on specific domains or pages (e.g., `github.com`, `twitter.com/compose`)
 
 ### Website Integration
-- **Show enhancement icons on websites**: Toggle the sparkles icons that appear in text inputs across websites
-- **Automatic detection**: Works on major platforms including Microsoft Teams, Slack, Gmail, and generic text inputs
-- **Performance optimized**: Lightweight implementation that doesn't affect website loading or performance
+- **Where the button shows**: multi-line text fields and rich editors that are big enough; never on search boxes, single-line inputs or tiny fields. The shortcut and the right-click menu work on any text field
+- **Rich editors**: text goes in through the editor's own paste handling (Slack, Teams, Lexical-based apps), and the result is checked afterwards. If a site refuses it, the text is copied to the clipboard instead and nothing in the field changes
+- **Performance optimized**: no page polling; the script reacts when a text field gets focus and only tracks the field while the button is visible
+- Password, one-time-code, card and similar fields are ignored, as are sites whose host looks like banking or login pages
 
 ## Platform Support
 
@@ -140,21 +151,22 @@ The extension is built with vanilla JavaScript and follows a clean, modular arch
 ```
 ├── manifest.json              # Extension configuration and permissions
 ├── src/
+│   ├── config/                # Providers, models, prompt instructions and limits
 │   ├── interface/
 │   │   ├── popup.html         # Main extension interface
 │   │   └── options.html       # Settings page
 │   ├── scripts/
 │   │   ├── popup.js           # Main UI logic and enhancement handling
 │   │   ├── options.js         # Settings management
-│   │   ├── background.js      # Background service worker for API communication
-│   │   └── content.js         # Website integration script
+│   │   ├── background.js      # Service worker: streaming API calls, shortcut, context menu
+│   │   ├── content.js         # Website integration script (in-place enhancement)
+│   │   └── shared.js          # Config/settings helpers shared by the extension pages
 │   └── styles/
 │       ├── common.css         # Shared styles and theme variables
 │       ├── popup.css          # Main interface styles
-│       ├── options.css        # Settings page styles
-│       └── content.css        # Website integration styles
-├── icons/                     # Extension icons (generated from SVG)
-└── generate-icons.js          # Icon generation utility
+│       └── options.css        # Settings page styles
+├── icons/                     # icon16/32/48/128.png; icon.svg and icon16.svg are their sources
+└── docs/screenshots/          # README images (not packaged)
 ```
 
 ### Key Technical Features
@@ -176,12 +188,22 @@ The extension is built with vanilla JavaScript and follows a clean, modular arch
 ## Requirements
 
 - Google Chrome browser (version 88+)
-- OpenAI API key with access to GPT-4.1 Nano model
-- Node.js and npm (for development only)
+- An OpenRouter API key
 
 ## Version History
 
-### v2.4.2 (Current)
+### v3.0.0 (Current)
+
+- **OpenRouter**: Grok 4.3 by default, or any OpenRouter model by ID. Settings test the connection, key and model in one click.
+- **In-Page Preview**: The ✨ Enhance button opens a streaming preview with tone, type and translation per site. Nothing in the page changes until you press Replace, and Undo puts it back.
+- **Rich Editors**: Works in Slack, Teams and Gmail. Mail signatures and quoted threads are never sent or rewritten.
+- **Shortcut and Menu**: `Alt+Shift+E` and the right-click menu open the same preview.
+- **Data Notice**: Nothing is sent until you accept the data notice.
+- **Privacy**: API keys and saved text stay on this device instead of syncing.
+- **Popup and Settings**: The popup fits in one screen, settings are grouped into sections, and errors stay readable.
+- **New Icon**: Redesigned toolbar icon, and local icons instead of Google Fonts.
+
+### v2.4.2
 - Added version display in settings page header
 - Improved content script input validation to exclude more input types (radio, checkbox, file, etc.)
 - Enhanced input type filtering to support search, url, and tel inputs
@@ -216,7 +238,3 @@ Guilherme Guerzoni
 ## License
 
 MIT License - See LICENSE file for details
-
-## Keywords
-
-Chrome extension, message enhancer, text improvement, typo correction, spelling checker, grammar checker, text beautifier, text polisher, GPT-4.1 Nano, OpenAI, writing assistant, Grammarly alternative, Slack enhancement, Microsoft Teams, Gmail, email enhancement, tone adjustment, text correction, communication tool, business writing, professional writing, content enhancement, AI writing assistant, text editor, message optimizer, workplace communication, chat enhancement, email formatter, language improvement, writing productivity, typo fixer, message formatting, content optimization, browser extension, productivity tool, writing tool, communication enhancement, text analysis, automated writing, smart writing, intelligent text processing, workplace productivity, business communication, professional messaging, text refinement, message clarity, writing enhancement, communication optimization

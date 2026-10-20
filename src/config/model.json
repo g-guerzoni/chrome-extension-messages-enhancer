@@ -1,21 +1,26 @@
 {
-  "defaultModel": "gpt-5-nano-2025-08-07",
+  "defaultModel": "x-ai/grok-4.3",
+  "customModel": {
+    "provider": "openrouter",
+    "pattern": "^[a-z0-9][a-z0-9._-]*/[a-z0-9][a-z0-9._:-]*$",
+    "example": "google/gemini-3.1-flash-lite"
+  },
   "models": [
     {
-      "id": "gpt-5-nano-2025-08-07",
-      "name": "GPT 5 Nano",
-      "provider": "OpenAI",
-      "max_completion_tokens": 10000,
-      "temperature": 1,
-      "default": true
-    },
-    {
-      "id": "gpt-4.1-nano-2025-04-14",
-      "name": "GPT 4.1 Nano",
-      "provider": "OpenAI",
-      "max_completion_tokens": 10000,
-      "temperature": 1,
-      "default": false
+      "id": "x-ai/grok-4.3",
+      "name": "Grok 4.3",
+      "provider": "openrouter",
+      "pricing": {
+        "input": 1.25,
+        "output": 2.5
+      },
+      "note": "xAI's replacement for Grok 4.1 Fast, with reasoning off for speed",
+      "params": {
+        "reasoning": {
+          "effort": "none"
+        },
+        "temperature": 0.3
+      }
     }
   ]
 }

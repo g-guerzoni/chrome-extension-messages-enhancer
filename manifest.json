@@ -1,19 +1,21 @@
 {
   "manifest_version": 3,
   "name": "AI Message Enhancer",
-  "description": "Enhance, correct typos, fix grammar, and beautify your text for Slack, Teams, email, and any website using AI",
-  "version": "2.4.2",
-  "permissions": ["storage", "activeTab"],
+  "description": "Fix typos, grammar and tone in any text field with AI. Uses your own OpenRouter API key.",
+  "version": "3.0.0",
+  "permissions": ["storage", "contextMenus", "scripting", "activeTab"],
   "action": {
     "default_popup": "src/interface/popup.html",
     "default_icon": {
       "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
       "48": "icons/icon48.png",
       "128": "icons/icon128.png"
     }
   },
   "icons": {
     "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
   },
@@ -22,20 +24,22 @@
     "service_worker": "src/scripts/background.js",
     "type": "module"
   },
+  "commands": {
+    "enhance-field": {
+      "suggested_key": {
+        "default": "Alt+Shift+E"
+      },
+      "description": "Enhance the focused text field (or the selected text)"
+    }
+  },
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
+      "matches": ["http://*/*", "https://*/*"],
       "js": ["src/scripts/content.js"],
-      "css": ["src/styles/content.css"],
-      "run_at": "document_end"
-    }
-  ],
-  "web_accessible_resources": [
-    {
-      "resources": [
-        "src/config/*.json"
-      ],
-      "matches": ["<all_urls>"]
+      "all_frames": true,
+      "match_about_blank": true,
+      "match_origin_as_fallback": true,
+      "run_at": "document_idle"
     }
   ]
 }

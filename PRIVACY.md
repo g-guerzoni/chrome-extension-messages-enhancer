@@ -1,101 +1,55 @@
-# Privacy Policy for Message Enhancer
+# Privacy Policy for AI Message Enhancer
 
-**Last Updated**: October 7, 2025
+**Last Updated**: October 20, 2026
 
 ## Overview
-Message Enhancer is a Chrome extension that helps users improve their written communications by enhancing message tone, clarity, and grammar using OpenAI's GPT models.
+AI Message Enhancer is a Chrome extension that improves the grammar, clarity and tone of text you write, using an AI model you choose on OpenRouter.
 
-## Data Collection and Usage
+## Data the Extension Handles
 
-### What We Collect
-Message Enhancer collects and processes the following data:
+### Text you choose to enhance
+- When you press Enhance in the popup, click ✨ Enhance next to a text field, press the keyboard shortcut or use the right-click menu, the text of that field (or your selection) is sent to the provider of the model you chose, together with your API key.
+- Nothing is sent before one of those actions, and nothing is sent until you accept the data notice shown on install.
+- If "Keep text when extension closes" is on, the popup's input and output text are stored on your device only.
 
-1. **User Settings**
-   - OpenAI API key (stored locally in Chrome sync storage)
-   - Selected AI model preference
-   - Theme preferences
-   - Content script enable/disable status
-   - Debug mode setting
-   - Blocked domains list
+### Settings
+- **On this device only** (Chrome local storage): your OpenRouter API key, the selected model, your consent to the data notice, the tone, type and translation you pick in the in-page preview for each site, and the popup's saved text.
+- **Synced with your Google account** (Chrome sync storage, if Chrome Sync is on): theme, tone, message type, translation, website integration settings, blocked domains and debug mode.
 
-2. **Message Content**
-   - Text you choose to enhance is sent to OpenAI's API for processing
-   - Input and output text may be temporarily stored locally for the "Keep text when extension closes" feature
+### What the extension does not do
+- It does not send any data to servers run by the developer.
+- It does not track your browsing history, collect analytics or show ads.
+- It does not sell your data or use it for anything other than enhancing the text you ask it to enhance.
 
-### What We Don't Collect
-- We do NOT collect, store, or transmit your personal data to our servers
-- We do NOT track your browsing history
-- We do NOT collect analytics or usage statistics
-- We do NOT share your data with third parties (except OpenAI for processing)
+## Who Receives Your Text
 
-## Data Storage
+| Recipient | When | Privacy policy |
+| --- | --- | --- |
+| OpenRouter | Every request | https://openrouter.ai/privacy |
+| The maker or host of the model you chose, via OpenRouter: xAI for Grok 4.3 (the default), or the provider of any other model you enter | Every request | See OpenRouter's provider list: https://openrouter.ai/providers |
 
-### Local Storage
-All extension settings and preferences are stored locally on your device using Chrome's sync storage API. This data is:
-- Encrypted by Chrome
-- Synced across your Chrome instances if you're signed in
-- Never sent to our servers
-
-### OpenAI API
-When you enhance text:
-- Your text is sent directly to OpenAI's API using YOUR API key
-- OpenAI processes the text according to their privacy policy
-- We do not store or log API requests
-- OpenAI's data retention policies apply (see: https://openai.com/privacy)
-
-## Third-Party Services
-
-### OpenAI
-This extension uses OpenAI's API to process text enhancement requests. By using this extension, you acknowledge that:
-- Your enhanced text is processed by OpenAI
-- OpenAI's Privacy Policy applies: https://openai.com/privacy
-- You are responsible for your OpenAI API usage and associated costs
+Requests use your own API key, so they are subject to your agreement with that provider, and you are responsible for the usage costs.
 
 ## Data Security
-- Your API key is stored securely in Chrome's encrypted storage
-- All communications with OpenAI use HTTPS encryption
-- No data is transmitted to servers we control
+- All requests to AI providers use HTTPS.
+- API keys are stored in Chrome's local extension storage on your device. They are not synced and are only sent to the provider they belong to.
 
-## Permissions Explanation
+## Permissions
 
-### Required Permissions
-1. **storage**: Store user preferences and settings locally
-2. **activeTab**: Allow the extension to interact with text inputs on websites when you explicitly click the enhancement icon
+- **storage**: save your settings, API keys and the popup's text.
+- **contextMenus**: add "Enhance with AI Message Enhancer" to the right-click menu of text fields.
+- **scripting** and **activeTab**: when you use the keyboard shortcut or the right-click menu on a tab that was open before the extension was installed or updated, load the extension's script into that tab so the request can be handled.
+- **Content script on all websites** (all frames): show the ✨ button next to the text field you are typing in and replace the text in place when you ask. The script only looks at the focused field on your device to decide whether to show the button; it sends nothing unless you take one of the actions listed above.
 
-### Content Scripts
-The extension can inject small icons into text inputs on websites (when enabled). This feature:
-- Only activates when explicitly enabled in settings
-- Can be disabled entirely
-- Specific domains can be blocked from showing icons
-- Does not read or transmit data without your explicit action
-
-## User Control
-You have complete control over your data:
-- You can disable the extension at any time
-- You can clear all stored data by removing the extension
-- You can block specific websites from showing enhancement icons
-- You can disable content script functionality entirely
+## Your Control
+- Turn off the ✨ button entirely, or hide it on specific sites, in settings.
+- Remove all stored data by uninstalling the extension.
 
 ## Children's Privacy
-This extension is not intended for children under 13. We do not knowingly collect data from children.
+This extension is not intended for children under 13.
 
 ## Changes to This Policy
-We may update this privacy policy from time to time. Changes will be reflected in the "Last Updated" date above.
+Changes are reflected in the "Last Updated" date above. If the way text is handled changes, the extension shows the data notice again.
 
 ## Contact
-For privacy-related questions or concerns, please contact:
-- GitHub: https://github.com/g-guerzoni/chrome-extension-messages-enhancer
-
-## Compliance
-This extension complies with:
-- Chrome Web Store Developer Program Policies
-- General Data Protection Regulation (GDPR)
-- California Consumer Privacy Act (CCPA)
-
-## Your Rights
-Under GDPR and CCPA, you have the right to:
-- Access your data (stored locally on your device)
-- Delete your data (uninstall the extension)
-- Opt-out of data processing (don't use the extension)
-
-Since all data is stored locally on your device, you have full control over your information at all times.
+For privacy-related questions, open an issue at https://github.com/g-guerzoni/chrome-extension-messages-enhancer/issues.
