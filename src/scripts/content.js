@@ -557,13 +557,14 @@
       return isVisible(x, y) && (isField(hit) || Boolean(hit.closest(INTERACTIVE)));
     };
 
-    // Best first. Each spot names the field corner it hangs from; "inside" spots must sit on the field.
+    // Best first: fully above the corner (never over the text), then straddling the top border.
+    // Each spot names the field corner it hangs from; "inside" spots must sit on the field.
     // Corner probes sit 20 px in from the edge so rounded corners still count as the field.
     const top = [rect.right - 20, rect.top + 4];
     const bottom = [rect.right - 20, rect.bottom - 4];
     const candidates = [
-      { x: rect.right - width - 8, y: rect.top - h / 2, corner: top },
       { x: rect.right - width, y: rect.top - h - 4, corner: top },
+      { x: rect.right - width - 8, y: rect.top - h / 2, corner: top },
       { x: rect.right - width - 4, y: rect.bottom - h - 4, corner: bottom, inside: true },
       { x: rect.right + 4, y: rect.bottom - h, corner: bottom },
       { x: rect.right - width, y: rect.bottom + 4, corner: bottom },
@@ -681,7 +682,9 @@
     close.addEventListener("click", () => closePopover({ restoreFocus: true }));
     cancel.addEventListener("click", cancelRun);
     diffToggle.addEventListener("click", () => {
-      diffToggle.setAttribute("aria-pressed", String(diffToggle.getAttribute("aria-pressed") !== "true"));
+      const showing = diffToggle.getAttribute("aria-pressed") !== "true";
+      diffToggle.setAttribute("aria-pressed", String(showing));
+      diffToggle.textContent = showing ? "Hide changes" : "Show changes";
       renderBody();
     });
     copy.addEventListener("click", copyResult);
@@ -742,6 +745,7 @@
     const { popover, pill } = ui;
     popover.root.hidden = false;
     popover.diffToggle.setAttribute("aria-pressed", "false");
+    popover.diffToggle.textContent = "Show changes";
     const atoms = countAtoms(field, selection);
     popover.warning.hidden = !atoms;
     popover.warning.textContent = `Replacing will turn ${atoms} @mention or emoji into plain text. Select only the words you want rewritten to keep them.`;
@@ -901,12 +905,14 @@
     const width = Math.min(innerWidth - 16, Math.max(320, Math.min(460, rect.width)));
     root.style.width = `${width}px`;
     const x = Math.max(8, Math.min(rect.right - width, innerWidth - width - 8));
-    const roomAbove = rect.top - 24;
+    // Leave room for the pill, which sits just above the field's top-right corner.
+    const gapAbove = PILL_HEIGHT + 12;
+    const roomAbove = rect.top - gapAbove - 8;
     const roomBelow = innerHeight - rect.bottom - 16;
     const above = roomAbove >= 200 || roomAbove > roomBelow;
     root.style.maxHeight = `${Math.max(160, Math.min(innerHeight * 0.5, above ? roomAbove : roomBelow))}px`;
     const height = root.offsetHeight;
-    placeAt(root, x, above ? rect.top - 16 - height : rect.bottom + 8);
+    placeAt(root, x, above ? rect.top - gapAbove - height : rect.bottom + 8);
   }
 
   async function copyResult() {
