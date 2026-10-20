@@ -1,4 +1,4 @@
-Fix typos, grammar and tone in any text field with AI. Uses your own OpenRouter or OpenAI API key.
+Fix typos, grammar and tone in any text field with AI. Uses your own OpenRouter API key.
 
 AI Message Enhancer polishes what you write in chats, emails and any other text field. It fixes typos and grammar, improves clarity and adjusts the tone, while keeping your meaning, your vocabulary and your language.
 
@@ -9,11 +9,11 @@ Key Features:
 - Undo: one click (or Ctrl+Z) brings back your original text.
 - Tone and format: Neutral or Formal tone, chat message or email format.
 - Translation: optionally translate your text to English while enhancing it.
-- Fast models: choose from a short list of fast, low-cost models, such as Grok 4.1 Fast, Gemini Flash Lite, GPT Nano and Claude Haiku.
+- Your choice of model: Grok 4.3 by default, or any other model available on OpenRouter, with a one-click connection test.
 - Your choice of site: hide the in-page button on sites you choose.
 - Light and dark themes.
 
 IMPORTANT NOTES:
-- You need your own API key from OpenRouter or OpenAI. Usage is billed by that provider to your account.
+- You need your own OpenRouter API key. Usage is billed by OpenRouter to your account.
 - Your text is sent only when you ask for an enhancement, and only to the provider of the model you chose. It is never sent to the developer.
 - API keys are stored on your device only.

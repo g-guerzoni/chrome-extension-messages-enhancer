@@ -1,6 +1,6 @@
 # AI Message Enhancer Chrome Extension
 
-A Chrome extension that enhances, corrects, and beautifies your text using fast, low-cost AI models through OpenRouter (Grok, Gemini, GPT, Claude) or OpenAI directly. Fix typos, improve clarity, adjust tone, and polish your writing for Slack, Teams, email, and any text input across the web.
+A Chrome extension that enhances, corrects, and beautifies your text using fast, low-cost AI models through OpenRouter: Grok 4.3 by default, or any other OpenRouter model. Fix typos, improve clarity, adjust tone, and polish your writing for Slack, Teams, email, and any text input across the web.
 
 ## Features
 
@@ -9,7 +9,7 @@ A Chrome extension that enhances, corrects, and beautifies your text using fast,
 - **Correct grammar and punctuation** mistakes
 - **Improve clarity and readability** of your writing
 - **Beautify and polish** text while preserving your original meaning
-- Bring your own key: OpenRouter (default, Grok 4.1 Fast) or OpenAI
+- Bring your own OpenRouter key; Grok 4.3 by default, or type any OpenRouter model ID
 - Responses stream in as they are generated
 
 <img src="docs/screenshots/popup.png" width="500" alt="Popup with the original text, tone, message type and translation options, the enhanced text and where the text is sent" />
@@ -72,7 +72,7 @@ A Chrome extension that enhances, corrects, and beautifies your text using fast,
 3. Configure the extension:
    - Click the extension icon in Chrome's toolbar
    - Click the "Settings" button (gear icon)
-   - Pick a model and enter the matching API key (OpenRouter or OpenAI)
+   - Pick a model, enter your OpenRouter API key and press **Test connection**
    - Select your preferred theme
    - Configure website integration settings
    - Click "Save Settings"
@@ -100,24 +100,21 @@ A Chrome extension that enhances, corrects, and beautifies your text using fast,
 ## Settings
 
 ### API Configuration
-- **Model**: choose from a short list of fast, low-cost models (see below)
+- **Model**: Grok 4.3 (recommended), or "Other OpenRouter model…" to type any model ID from [openrouter.ai/models](https://openrouter.ai/models)
 - **Data notice**: shown on install and on upgrade from v2. Nothing is sent to an AI provider until you press OK
-- **API keys**: an OpenRouter key (`sk-or-...`) for the OpenRouter models, or an OpenAI key for the OpenAI models
+- **API key**: an OpenRouter key (`sk-or-...`)
+- **Test connection**: sends a tiny request with the model and key in the form (saved or not) and reports the result
 - API keys and the selected model are stored in Chrome's local storage on this device only (not synced to your Google account)
 - Your API key is only sent to the provider of the selected model
 
 ### Models
 
-| Model | Provider | Price (input / output per 1M tokens) | Notes |
-| --- | --- | --- | --- |
-| Grok 4.1 Fast | OpenRouter | $0.20 / $0.50 | Default. Fast, cheapest output, reasoning disabled |
-| Gemini 3.1 Flash Lite | OpenRouter | $0.25 / $1.50 | Very low latency |
-| GPT-5.4 Nano | OpenRouter | $0.20 / $1.25 | |
-| Claude Haiku 4.5 | OpenRouter | $1.00 / $5.00 | Highest quality, higher cost |
-| GPT-5 Nano | OpenAI | $0.05 / $0.40 | Minimal reasoning effort |
-| GPT-4.1 Nano | OpenAI | $0.10 / $0.40 | |
+| Model | Price (input / output per 1M tokens) | Notes |
+| --- | --- | --- |
+| Grok 4.3 (`x-ai/grok-4.3`) | $1.25 / $2.50 | Default. xAI's replacement for Grok 4.1 Fast; reasoning is turned off for speed |
+| Any OpenRouter model | See [openrouter.ai/models](https://openrouter.ai/models) | Type its ID, e.g. `google/gemini-3.1-flash-lite` |
 
-Prices as listed by the providers when this list was made; check OpenRouter for current prices. Models are configured in `src/config/model.json`.
+If a model refuses to turn reasoning off or to stream, the request is retried without that option. To compare candidates on cost, speed and quality with the extension's real prompt, run `OPENROUTER_API_KEY=sk-or-... node tools/compare-models.mjs`. Models are configured in `src/config/model.json`.
 
 ### User Preferences
 - **Theme Selection**: Choose between System, Light, or Dark mode
@@ -191,12 +188,12 @@ The extension is built with vanilla JavaScript and follows a clean, modular arch
 ## Requirements
 
 - Google Chrome browser (version 88+)
-- An OpenRouter API key (or an OpenAI API key)
+- An OpenRouter API key
 
 ## Version History
 
 ### v3.0.0 (Current)
-- Added OpenRouter support with a short list of fast, low-cost models; Grok 4.1 Fast is the new default
+- Switched to OpenRouter: Grok 4.3 by default, any other OpenRouter model by ID, and a Test connection button in settings
 - Responses stream into the popup as they are generated; reasoning is disabled or minimal for faster answers
 - New in-page flow: a ✨ Enhance button that avoids the site's own buttons and opens a streaming preview with tone, type and translation per site, a word diff, Replace, Copy, Retry and Undo. Nothing changes in the page until you press Replace
 - Added a keyboard shortcut (`Alt+Shift+E`) and a right-click menu entry, and a settings choice for where the button shows

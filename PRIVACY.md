@@ -3,7 +3,7 @@
 **Last Updated**: October 20, 2026
 
 ## Overview
-AI Message Enhancer is a Chrome extension that improves the grammar, clarity and tone of text you write, using an AI model you choose from OpenRouter or OpenAI.
+AI Message Enhancer is a Chrome extension that improves the grammar, clarity and tone of text you write, using an AI model you choose on OpenRouter.
 
 ## Data the Extension Handles
 
@@ -13,7 +13,7 @@ AI Message Enhancer is a Chrome extension that improves the grammar, clarity and
 - If "Keep text when extension closes" is on, the popup's input and output text are stored on your device only.
 
 ### Settings
-- **On this device only** (Chrome local storage): your OpenRouter and/or OpenAI API keys, the selected model, your consent to the data notice, the tone, type and translation you pick in the in-page preview for each site, and the popup's saved text.
+- **On this device only** (Chrome local storage): your OpenRouter API key, the selected model, your consent to the data notice, the tone, type and translation you pick in the in-page preview for each site, and the popup's saved text.
 - **Synced with your Google account** (Chrome sync storage, if Chrome Sync is on): theme, tone, message type, translation, website integration settings, blocked domains and debug mode.
 
 ### What the extension does not do
@@ -25,9 +25,8 @@ AI Message Enhancer is a Chrome extension that improves the grammar, clarity and
 
 | Recipient | When | Privacy policy |
 | --- | --- | --- |
-| OpenRouter | When an OpenRouter model is selected | https://openrouter.ai/privacy |
-| The model's maker, via OpenRouter: xAI (Grok), Google (Gemini), OpenAI (GPT) or Anthropic (Claude), or the hosting provider OpenRouter routes the request to | When the matching OpenRouter model is selected | See OpenRouter's provider list: https://openrouter.ai/providers |
-| OpenAI | When an OpenAI model is selected | https://openai.com/policies/privacy-policy |
+| OpenRouter | Every request | https://openrouter.ai/privacy |
+| The maker or host of the model you chose, via OpenRouter: xAI for Grok 4.3 (the default), or the provider of any other model you enter | Every request | See OpenRouter's provider list: https://openrouter.ai/providers |
 
 Requests use your own API key, so they are subject to your agreement with that provider, and you are responsible for the usage costs.
 
