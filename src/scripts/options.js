@@ -1,4 +1,4 @@
-import { loadConfig, getApiKeys, formatPrice, applyTheme, setIcon } from "./shared.js";
+import { loadConfig, getApiKeys, formatPrice, applyTheme, setIcon, DATA_CONSENT_VERSION } from "./shared.js";
 
 const modelSelect = document.getElementById("model");
 const modelHelp = document.getElementById("model-help");
@@ -10,6 +10,9 @@ const debugModeCheckbox = document.getElementById("debug-mode");
 const blockedDomainsTextarea = document.getElementById("blocked-domains");
 const saveButton = document.getElementById("save-btn");
 const statusDiv = document.getElementById("status");
+const dataNotice = document.getElementById("data-notice");
+const consentStatus = document.getElementById("consent-status");
+const consentButton = document.getElementById("consent-btn");
 
 const { config, models } = await loadConfig();
 const apiKeyInputs = {};
@@ -132,14 +135,36 @@ function rejectKey(providerId, message) {
   showStatus(message, "error");
 }
 
+async function renderConsent() {
+  const { dataConsent } = await chrome.storage.local.get("dataConsent");
+  const accepted = dataConsent?.version === DATA_CONSENT_VERSION;
+
+  dataNotice.classList.toggle("pending", !accepted);
+  consentStatus.textContent = accepted
+    ? `You accepted this on ${new Date(dataConsent.at).toLocaleDateString()}.`
+    : "The extension sends nothing until you agree.";
+  consentButton.textContent = accepted ? "Withdraw consent" : "I agree";
+  consentButton.className = accepted ? "secondary-button" : "";
+}
+
+async function toggleConsent() {
+  if (consentButton.textContent === "I agree") {
+    await chrome.storage.local.set({ dataConsent: { version: DATA_CONSENT_VERSION, at: Date.now() } });
+  } else {
+    await chrome.storage.local.remove("dataConsent");
+  }
+  renderConsent();
+}
+
 async function loadSettings() {
-  const [settings, apiKeys] = await Promise.all([
-    chrome.storage.sync.get(["model", "theme", "keepTextOnClose", "enableContentScript", "debugMode", "blockedDomains"]),
+  const [settings, { model }, apiKeys] = await Promise.all([
+    chrome.storage.sync.get(["theme", "keepTextOnClose", "enableContentScript", "debugMode", "blockedDomains"]),
+    chrome.storage.local.get("model"),
     getApiKeys(),
   ]);
   const { defaults } = config;
 
-  modelSelect.value = models.models.some((m) => m.id === settings.model) ? settings.model : models.defaultModel;
+  modelSelect.value = models.models.some((m) => m.id === model) ? model : models.defaultModel;
   themeSelect.value = settings.theme ?? defaults.theme;
   keepTextCheckbox.checked = settings.keepTextOnClose ?? defaults.keepTextOnClose;
   contentScriptCheckbox.checked = settings.enableContentScript ?? defaults.enableContentScript;
@@ -159,6 +184,14 @@ async function saveSettings() {
     const key = input.value.trim();
     const provider = config.providers[providerId];
     if (!key) continue;
+    // OpenRouter keys ("sk-or-") also start with OpenAI's "sk-", so check the more specific prefixes too.
+    const otherProvider = Object.entries(config.providers).find(
+      ([id, other]) => id !== providerId && other.keyPrefix.length > provider.keyPrefix.length && key.startsWith(other.keyPrefix)
+    );
+    if (otherProvider) {
+      rejectKey(providerId, `This looks like an ${otherProvider[1].name} key. Paste it in the ${otherProvider[1].name} field.`);
+      return;
+    }
     if (!key.startsWith(provider.keyPrefix) || key.length < 20) {
       rejectKey(providerId, `Invalid ${provider.name} API key. It should start with "${provider.keyPrefix}".`);
       return;
@@ -180,9 +213,10 @@ async function saveSettings() {
 
   try {
     await Promise.all([
-      chrome.storage.local.set({ apiKeys }),
+      chrome.storage.local.set({ apiKeys, model: model.id }),
+      // v2 kept the OpenAI key in sync storage; it now lives in local storage only.
+      chrome.storage.sync.remove(["openaiApiKey", "openaiModel"]),
       chrome.storage.sync.set({
-        model: model.id,
         theme: themeSelect.value,
         keepTextOnClose: keepTextCheckbox.checked,
         enableContentScript: contentScriptCheckbox.checked,
@@ -203,8 +237,10 @@ renderApiKeyFields();
 modelSelect.addEventListener("change", updateModelHelp);
 themeSelect.addEventListener("change", () => applyTheme(themeSelect.value));
 saveButton.addEventListener("click", saveSettings);
+consentButton.addEventListener("click", toggleConsent);
 document.querySelector("main").addEventListener("input", () => setDirty(true));
 addEventListener("beforeunload", (event) => {
   if (dirty) event.preventDefault();
 });
 loadSettings();
+renderConsent();

@@ -1,6 +1,10 @@
 (() => {
   "use strict";
 
+  // The service worker re-injects this script into tabs opened before an install or update.
+  if (globalThis.__aiMessageEnhancerLoaded) return;
+  globalThis.__aiMessageEnhancerLoaded = true;
+
   const ICON_SIZE = 24;
   const ICON_OFFSET = 6;
   const TOAST_DURATION_MS = 6000;

@@ -11,6 +11,19 @@
     <main>
         <h1>AI Message Enhancer Settings <span id="version" class="version-text"></span></h1>
 
+        <section id="data-notice" class="notice-panel" aria-labelledby="data-notice-title">
+            <h2 id="data-notice-title">How your text is handled</h2>
+            <p>
+                When you press Enhance in the popup, click the ✨ icon, press the keyboard shortcut or use the
+                right-click menu, the text of that field (or your selection) is sent with your API key to the
+                provider of the model you chose: OpenRouter, which forwards it to the model's maker (xAI, Google,
+                OpenAI or Anthropic), or OpenAI directly. Nothing is sent before one of those actions, and nothing
+                is ever sent to the extension's developer.
+            </p>
+            <p id="consent-status" class="help-text"></p>
+            <button type="button" id="consent-btn">I agree</button>
+        </section>
+
         <div class="form-group">
             <label for="model">Model</label>
             <select id="model"></select>

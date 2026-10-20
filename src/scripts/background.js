@@ -1,31 +1,41 @@
-import { loadConfig, getActiveModel, getApiKeys, getPrefs } from "./shared.js";
+import { loadConfig, getActiveModel, getApiKeys, getPrefs, hasDataConsent } from "./shared.js";
 
 const CONTEXT_MENU_ID = "enhance-selection";
+const CONTENT_SCRIPT = "src/scripts/content.js";
 
-chrome.runtime.onInstalled.addListener(() => {
-  migrateStorage();
-  chrome.contextMenus.removeAll(() => {
-    chrome.contextMenus.create({
-      id: CONTEXT_MENU_ID,
-      title: "Enhance with AI Message Enhancer",
-      contexts: ["editable"],
-    });
+// Menus are not restored when the extension is re-enabled, so recreate them on every worker start.
+chrome.contextMenus.removeAll(() => {
+  chrome.contextMenus.create({
+    id: CONTEXT_MENU_ID,
+    title: "Enhance with AI Message Enhancer",
+    contexts: ["editable"],
   });
+});
+
+chrome.runtime.onInstalled.addListener(async ({ reason, previousVersion }) => {
+  await migrateStorage().catch((error) => debug("Storage migration failed:", error));
+
+  // New installs and upgrades from v2 must see the data notice before any text is sent.
+  const upgradedFromV2 = reason === "update" && Number.parseInt(previousVersion, 10) < 3;
+  if ((reason === "install" || upgradedFromV2) && !(await hasDataConsent())) {
+    chrome.runtime.openOptionsPage();
+  }
 });
 
 // v3 moved secrets and message text out of sync storage and introduced multiple providers.
 async function migrateStorage() {
-  const legacyKeys = ["openaiApiKey", "openaiModel", "translateEnabled", "persistedInputText", "persistedOutputText"];
-  const legacy = await chrome.storage.sync.get([...legacyKeys, "model", "prefs"]);
+  const legacy = await chrome.storage.sync.get(["openaiApiKey", "openaiModel", "translateEnabled", "persistedInputText", "persistedOutputText", "prefs"]);
+  const current = await chrome.storage.local.get(["apiKeys", "model"]);
   const { models } = await loadConfig();
   const local = {};
 
-  if (legacy.openaiApiKey) {
-    local.apiKeys = { ...(await getApiKeys()), openai: legacy.openaiApiKey };
+  // The synced v2 key stays in place for devices still on v2; settings remove it on the next save.
+  if (legacy.openaiApiKey && !current.apiKeys?.openai) {
+    local.apiKeys = { ...current.apiKeys, openai: legacy.openaiApiKey };
     // Existing users keep working on their OpenAI key until they pick another model.
-    if (!legacy.model) {
+    if (!current.model) {
       const known = models.models.some((m) => m.id === legacy.openaiModel);
-      await chrome.storage.sync.set({ model: known ? legacy.openaiModel : models.legacyDefaultModel });
+      local.model = known ? legacy.openaiModel : models.legacyDefaultModel;
     }
   }
   if (legacy.translateEnabled !== undefined && !legacy.prefs) {
@@ -37,7 +47,9 @@ async function migrateStorage() {
   }
 
   await chrome.storage.local.set(local);
-  await chrome.storage.sync.remove(legacyKeys);
+  // v2 leftovers: page text handed to the popup, and synced message text.
+  await chrome.storage.local.remove(["pendingText", "pendingTimestamp", "autoEnhance", "fromWebsite"]);
+  await chrome.storage.sync.remove(["translateEnabled", "persistedInputText", "persistedOutputText"]);
 }
 
 async function debug(...args) {
@@ -49,8 +61,16 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "enhanceText") {
     enhanceText(request.data)
       .then((text) => sendResponse({ text }))
-      .catch((error) => sendResponse({ error: error.message }));
+      .catch((error) => {
+        debug("Enhancement failed:", error);
+        sendResponse({ error: error.message });
+      });
     return true;
+  }
+
+  if (request.action === "openOptions") {
+    chrome.runtime.openOptionsPage();
+    return;
   }
 
   if (request.action === "getContentConfig") {
@@ -70,22 +90,38 @@ chrome.runtime.onConnect.addListener((port) => {
       const text = await enhanceText(data, (delta) => port.postMessage({ delta }), controller.signal);
       port.postMessage({ done: true, text });
     } catch (error) {
-      if (!controller.signal.aborted) port.postMessage({ error: error.message });
+      if (controller.signal.aborted) return;
+      debug("Enhancement failed:", error);
+      port.postMessage({ error: error.message });
     }
   });
 });
 
 chrome.commands.onCommand.addListener((command, tab) => {
-  if (command === "enhance-field" && tab?.id) {
-    chrome.tabs.sendMessage(tab.id, { action: "enhanceActiveField" }).catch(() => {});
-  }
+  if (command === "enhance-field" && tab?.id) enhanceInTab(tab.id);
 });
 
 chrome.contextMenus.onClicked.addListener((info, tab) => {
-  if (info.menuItemId === CONTEXT_MENU_ID && tab?.id) {
-    chrome.tabs.sendMessage(tab.id, { action: "enhanceActiveField" }, { frameId: info.frameId }).catch(() => {});
-  }
+  if (info.menuItemId === CONTEXT_MENU_ID && tab?.id) enhanceInTab(tab.id, info.frameId);
 });
+
+// Tabs opened before the extension was installed or updated have no content script yet,
+// so inject it on demand. The shortcut and the menu click grant activeTab for this.
+async function enhanceInTab(tabId, frameId) {
+  const message = { action: "enhanceActiveField" };
+  const options = frameId === undefined ? {} : { frameId };
+  try {
+    await chrome.tabs.sendMessage(tabId, message, options);
+  } catch {
+    try {
+      const target = frameId === undefined ? { tabId, allFrames: true } : { tabId, frameIds: [frameId] };
+      await chrome.scripting.executeScript({ target, files: [CONTENT_SCRIPT] });
+      await chrome.tabs.sendMessage(tabId, message, options);
+    } catch (error) {
+      debug("Could not reach the page:", error);
+    }
+  }
+}
 
 async function enhanceText({ text, ...overrides }, onDelta = () => {}, signal) {
   const [{ config, instructions }, model, apiKeys, prefs] = await Promise.all([
@@ -102,48 +138,49 @@ async function enhanceText({ text, ...overrides }, onDelta = () => {}, signal) {
   if (text.length > config.limits.maxCharacters) {
     throw new Error(`Text is too long (max ${config.limits.maxCharacters} characters).`);
   }
+  if (!(await hasDataConsent())) throw new Error("Please review and accept the data notice in the extension settings first.");
   if (!apiKey) throw new Error(`${provider.name} API key not found. Please set it in the extension settings.`);
 
-  const startedAt = Date.now();
-  const response = await fetch(provider.endpoint, {
-    method: "POST",
-    signal,
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
-      ...provider.headers,
-    },
-    body: JSON.stringify({
-      model: model.id,
-      messages: [
-        { role: "system", content: buildSystemMessage(instructions, tone, type, translate) },
-        { role: "user", content: text },
-      ],
-      stream: true,
-      [provider.maxTokensParam]: config.limits.maxCompletionTokens,
-      ...provider.params,
-      ...model.params,
-    }),
-  });
+  const send = (stream) =>
+    fetch(provider.endpoint, {
+      method: "POST",
+      signal,
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+        ...provider.headers,
+      },
+      body: JSON.stringify({
+        model: model.id,
+        messages: [
+          { role: "system", content: buildSystemMessage(instructions, tone, type, translate) },
+          { role: "user", content: text },
+        ],
+        stream,
+        [provider.maxTokensParam]: config.limits.maxCompletionTokens,
+        ...provider.params,
+        ...model.params,
+      }),
+    });
 
+  const startedAt = Date.now();
+  let response = await send(true);
+  if (response.status === 400) {
+    // OpenAI only lets verified organizations stream some models; fall back to a single response.
+    const message = await readApiError(response, provider);
+    if (!/stream/i.test(message)) throw new Error(message);
+    debug("Streaming refused, retrying without it:", message);
+    response = await send(false);
+  }
   if (!response.ok) throw new Error(await readApiError(response, provider));
 
-  let output = "";
-  let finishReason = null;
-  for await (const chunk of readServerSentEvents(response.body)) {
-    if (chunk.error) throw new Error(chunk.error.message || "The model stream failed.");
-    const choice = chunk.choices?.[0];
-    const delta = choice?.delta?.content;
-    if (delta) {
-      output += delta;
-      onDelta(delta);
-    }
-    finishReason = choice?.finish_reason ?? finishReason;
-  }
+  const isStream = response.headers.get("content-type")?.includes("text/event-stream");
+  const result = isStream ? await readStream(response.body, onDelta) : readCompletion(await response.json(), onDelta);
 
+  const { finishReason } = result;
+  const output = result.output.trim();
   debug(`${model.id} answered in ${Date.now() - startedAt}ms (finish_reason: ${finishReason})`);
 
-  output = output.trim();
   if (finishReason === "length") throw new Error("The response was cut off because it reached the token limit.");
   if (!output) throw new Error("The model returned an empty response. Try again or choose another model.");
   return output;
@@ -161,15 +198,38 @@ async function readApiError(response, provider) {
   }
 }
 
+async function readStream(body, onDelta) {
+  let output = "";
+  let finishReason = null;
+
+  for await (const chunk of readServerSentEvents(body)) {
+    if (chunk.error) throw new Error(chunk.error.message || "The model stream failed.");
+    const choice = chunk.choices?.[0];
+    const delta = choice?.delta?.content;
+    if (delta) {
+      output += delta;
+      onDelta(delta);
+    }
+    finishReason = choice?.finish_reason ?? finishReason;
+  }
+  return { output, finishReason };
+}
+
+function readCompletion(data, onDelta) {
+  const choice = data.choices?.[0];
+  const output = choice?.message?.content ?? "";
+  if (output) onDelta(output);
+  return { output, finishReason: choice?.finish_reason ?? null };
+}
+
 async function* readServerSentEvents(body) {
   const reader = body.pipeThrough(new TextDecoderStream()).getReader();
   let buffer = "";
 
   while (true) {
     const { value, done } = await reader.read();
-    if (done) return;
-
-    buffer += value;
+    // Flush the last event even when the stream ends without a trailing newline.
+    buffer += done ? "\n" : value;
     const lines = buffer.split("\n");
     buffer = lines.pop();
 
@@ -178,8 +238,16 @@ async function* readServerSentEvents(body) {
       if (!line.startsWith("data:")) continue;
       const data = line.slice(5).trim();
       if (data === "[DONE]") return;
-      yield JSON.parse(data);
+      let event;
+      try {
+        event = JSON.parse(data);
+      } catch {
+        debug("Skipping a malformed stream event:", data);
+        continue;
+      }
+      yield event;
     }
+    if (done) return;
   }
 }
 
