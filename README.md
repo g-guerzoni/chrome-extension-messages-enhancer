@@ -15,12 +15,14 @@ A Chrome extension that enhances, corrects, and beautifies your text using fast,
 <img width="509" height="604" alt="image" src="https://github.com/user-attachments/assets/e080ca0a-d7ff-4488-af7c-781c6149b0b5" />
 
 ### Website Integration
-- **Enhancement icon appears directly in text fields** across websites like Teams, Slack, Gmail, and any web page
-- **In-place enhancement**: Click the sparkles ✨ icon and the text in the field is replaced with the enhanced version, with an **Undo** button (Ctrl+Z also works)
-- **Selection support**: Select part of the text to enhance only that part
-- **Keyboard shortcut**: `Alt+Shift+E` enhances the focused field (change it at `chrome://extensions/shortcuts`)
-- **Right-click menu**: "Enhance with AI Message Enhancer" on any editable field
-- Uses the tone, message type and translation options last chosen in the popup
+- **✨ Enhance button** on message boxes across websites like Teams, Slack, Gmail and Outlook. It sits on the field's border and moves out of the way of the site's own buttons
+- **Review before replacing**: the enhanced text streams into a small preview next to the field. Nothing in the page changes until you press **Replace** (or Ctrl+Enter); **Show changes** highlights what was edited
+- **Tone, type and translation per site**: Neutral or Formal, Message or Email (Gmail and Outlook start as Email), and translate to English, remembered for each site
+- **Selection support**: select part of the text to rewrite only that part and keep @mentions and formatting elsewhere
+- **Undo**: one click, or Ctrl+Z, puts the previous text back with its formatting
+- **Mail aware**: in Gmail and Outlook, your signature and the quoted thread are never sent or rewritten
+- **Keyboard shortcut**: `Alt+Shift+E` opens the preview for the focused field (change it in settings)
+- **Right-click menu**: "Enhance with AI Message Enhancer…" on any editable field
 
 <img width="929" height="70" alt="Screenshot 2025-08-04 at 13 20 40" src="https://github.com/user-attachments/assets/f59e7823-a668-4b57-94db-13ea93d0b15d" />
 
@@ -89,11 +91,11 @@ A Chrome extension that enhances, corrects, and beautifies your text using fast,
 6. Click the copy icon to copy the corrected text to your clipboard
 
 ### Website Integration Method
-1. Navigate to any website with text inputs (Teams, Slack, Gmail, etc.)
-2. Type your message in a text field
-3. Click the sparkles ✨ icon, press `Alt+Shift+E`, or right-click and choose "Enhance with AI Message Enhancer"
-4. The text is enhanced in place (only the selection, if you selected something)
-5. Not happy with it? Click **Undo** in the notification or press Ctrl+Z
+1. Type your message in a message box (Teams, Slack, Gmail, Outlook or any site)
+2. Click **✨ Enhance** on the field's border, press `Alt+Shift+E`, or right-click and choose "Enhance with AI Message Enhancer…"
+3. Review the enhanced text in the preview; change the tone, type or translation if you like
+4. Press **Replace** (or Ctrl+Enter) to put it in the field, or Esc to close without changes
+5. Changed your mind? Click **Undo** next to the button or press Ctrl+Z
 
 ## Settings
 
@@ -120,14 +122,15 @@ Prices as listed by the providers when this list was made; check OpenRouter for 
 ### User Preferences
 - **Theme Selection**: Choose between System, Light, or Dark mode
 - **Keep Text on Close**: Automatically save and restore your text between sessions
-- **Website Integration**: Enable or disable the ✨ icon on websites
-- **Domain Blocking**: Block enhancement icons on specific domains or pages (e.g., `github.com`, `twitter.com/compose`)
+- **Website Integration**: show the ✨ Enhance button on multi-line fields, only on Slack, Teams, Gmail and Outlook, or never
+- **Keyboard shortcut**: see the current shortcut and change it
+- **Domain Blocking**: hide the ✨ Enhance button on specific domains or pages (e.g., `github.com`, `twitter.com/compose`)
 
 ### Website Integration
-- **Show enhancement icons on websites**: Toggle the sparkles icon that appears in text fields across websites
-- **Automatic detection**: Works with textareas, text inputs and rich editors (contenteditable), including Microsoft Teams, Slack and Gmail
-- **Performance optimized**: No page polling; the script only reacts when a text field gets focus
-- Password, one-time-code and credit card fields are ignored, as are sites whose host looks like banking or login pages
+- **Where the button shows**: multi-line text fields and rich editors that are big enough; never on search boxes, single-line inputs or tiny fields. The shortcut and the right-click menu work on any text field
+- **Rich editors**: text goes in through the editor's own paste handling (Slack, Teams, Lexical-based apps), and the result is checked afterwards. If a site refuses it, the text is copied to the clipboard instead and nothing in the field changes
+- **Performance optimized**: no page polling; the script reacts when a text field gets focus and only tracks the field while the button is visible
+- Password, one-time-code, card and similar fields are ignored, as are sites whose host looks like banking or login pages
 
 ## Platform Support
 
@@ -195,13 +198,15 @@ The extension is built with vanilla JavaScript and follows a clean, modular arch
 ### v3.0.0 (Current)
 - Added OpenRouter support with a short list of fast, low-cost models; Grok 4.1 Fast is the new default
 - Responses stream into the popup as they are generated; reasoning is disabled or minimal for faster answers
-- The ✨ icon now enhances the text in place (or only the selection) with Undo, instead of opening the popup
-- Added a keyboard shortcut (`Alt+Shift+E`) and a right-click menu entry
-- Text replacement goes through the browser's editing pipeline, so rich editors (Slack, Teams, Gmail) keep working and Ctrl+Z undoes it
+- New in-page flow: a ✨ Enhance button that avoids the site's own buttons and opens a streaming preview with tone, type and translation per site, a word diff, Replace, Copy, Retry and Undo. Nothing changes in the page until you press Replace
+- Added a keyboard shortcut (`Alt+Shift+E`) and a right-click menu entry, and a settings choice for where the button shows
+- Text goes in through each editor's own paste handling and is verified, so Slack (Quill), Teams (CKEditor 5) and Lexical-based editors work and Ctrl+Z undoes it; Gmail and Outlook signatures and quoted threads are left alone
+- A data notice must be accepted before any text is sent, as the Chrome Web Store requires
 - API keys and saved text moved from sync storage to local storage (existing settings are migrated automatically)
 - Clearer API errors, including empty or truncated responses
-- Content script rewritten: no polling, a single shadow-DOM icon, works in iframes, fixed disabled/read-only fields getting an icon
-- Removed unused permissions (`activeTab`) and the web-accessible config files
+- Content script rewritten: no polling, works in iframes and modal dialogs, skips search, sensitive, disabled and read-only fields
+- Popup fits in one screen, guides first-run key setup and keeps errors readable; settings mark which key the model needs
+- New toolbar icon, local SVG icons instead of Google Fonts, and the icon PNGs are committed so fresh clones load
 
 ### v2.4.2
 - Added version display in settings page header

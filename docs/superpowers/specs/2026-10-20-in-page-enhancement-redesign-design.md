@@ -1,6 +1,6 @@
 # In-Page Enhancement Redesign - Design
 
-**Status:** approved for implementation (v3.1.0)
+**Status:** implemented in v3.0.0
 **Scope:** `src/scripts/content.js`, `src/scripts/background.js`, settings page, `config.json`, `instructions.json`
 
 ## Why

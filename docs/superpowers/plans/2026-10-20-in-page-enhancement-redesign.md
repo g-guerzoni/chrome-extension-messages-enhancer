@@ -20,62 +20,62 @@
 
 **Files:** `src/scripts/content.js`
 
-- [ ] Add `extract(root, range)` (DOM walk: block boundaries, `<br>`, `img[alt]`, zero-width and NBSP cleanup, mail signature and quote exclusions).
-- [ ] Add `resolveTarget(field)`: selection inside the field (as a `Range` or text offsets), else the user-authored region.
-- [ ] Add `replaceText(field, text, target)`: select, wait for `selectionchange` plus a frame, then `insertText` (form controls) or synthetic paste with a per-line `insertText`/`insertParagraph` fallback; verify by re-extracting.
-- [ ] Add `undoReplace(field, snapshot, inserted)`: keydown Ctrl/Cmd+Z, `beforeinput historyUndo`, `execCommand("undo")`, verifying after each.
-- [ ] Remove `getText`, `insertText`, `undo` and the `innerText` fallbacks.
+- [x] Add `extract(root, range)` (DOM walk: block boundaries, `<br>`, `img[alt]`, zero-width and NBSP cleanup, mail signature and quote exclusions).
+- [x] Add `resolveTarget(field)`: selection inside the field (as a `Range` or text offsets), else the user-authored region.
+- [x] Add `replaceText(field, text, target)`: select, wait for `selectionchange` plus a frame, then `insertText` (form controls) or synthetic paste with a per-line `insertText`/`insertParagraph` fallback; verify by re-extracting.
+- [x] Add `undoReplace(field, snapshot, inserted)`: keydown Ctrl/Cmd+Z, `beforeinput historyUndo`, `execCommand("undo")`, verifying after each.
+- [x] Remove `getText`, `insertText`, `undo` and the `innerText` fallbacks.
 
 ### Task 2: Streaming client
 
 **Files:** `src/scripts/content.js`, `src/scripts/background.js`
 
-- [ ] `streamEnhancement(request, onDelta)` over `chrome.runtime.connect({ name: "enhance" })`, returning `{ promise, cancel }`; a disconnect without `done` rejects with "Lost the connection"; an invalidated context rejects with "reload this page".
-- [ ] `onConnect` ignores ports from other extensions (`sender.id`).
+- [x] `streamEnhancement(request, onDelta)` over `chrome.runtime.connect({ name: "enhance" })`, returning `{ promise, cancel }`; a disconnect without `done` rejects with "Lost the connection"; an invalidated context rejects with "reload this page".
+- [x] `onConnect` ignores ports from other extensions (`sender.id`).
 
 ### Task 3: Pill
 
 **Files:** `src/scripts/content.js`
 
-- [ ] Eligibility rules from spec section 1, with the patterns read from `getContentConfig`.
-- [ ] `placePill()`: candidate spots, `elementsFromPoint` collision test, clip-rectangle test.
-- [ ] Composer-scoped focus with a 300 ms hide delay; ResizeObserver, scroll and resize listeners, 250 ms poll while visible.
-- [ ] Move the UI host into `dialog:modal`, `:popover-open` or `:fullscreen` ancestors.
+- [x] Eligibility rules from spec section 1, with the patterns read from `getContentConfig`.
+- [x] `placePill()`: candidate spots, `elementsFromPoint` collision test, clip-rectangle test.
+- [x] Composer-scoped focus with a 300 ms hide delay; ResizeObserver, scroll and resize listeners, 250 ms poll while visible.
+- [x] Move the UI host into `dialog:modal`, `:popover-open` or `:fullscreen` ancestors.
 
 ### Task 4: Review popover
 
 **Files:** `src/scripts/content.js`
 
-- [ ] Header controls (tone, type, translate) backed by `sitePrefs` and site defaults; re-run on change.
-- [ ] Streaming body, word diff toggle, elapsed time and Cancel.
-- [ ] Replace (with stale-text confirmation), Copy, Retry; mention and emoji warning.
-- [ ] Keyboard capture: Esc, Ctrl/Cmd+Enter, Tab cycling, key events stopped at the popover root.
-- [ ] Inline errors with "Open settings" for consent and key errors.
-- [ ] "Replaced · Undo" chip for 8 s; remove the bottom-centre toast.
+- [x] Header controls (tone, type, translate) backed by `sitePrefs` and site defaults; re-run on change.
+- [x] Streaming body, word diff toggle, elapsed time and Cancel.
+- [x] Replace (with stale-text confirmation), Copy, Retry; mention and emoji warning.
+- [x] Keyboard capture: Esc, Ctrl/Cmd+Enter, Tab cycling, key events stopped at the popover root.
+- [x] Inline errors with "Open settings" for consent and key errors.
+- [x] "Replaced · Undo" chip for 8 s; remove the bottom-centre toast.
 
 ### Task 5: Config, background, prompt
 
 **Files:** `src/config/config.json`, `src/config/instructions.json`, `src/scripts/background.js`, `src/config/README.md`
 
-- [ ] `contentScript.sites` profiles (Gmail, Outlook, Slack, Teams), `minField`, `searchPattern`, `sensitivePattern`; `defaults.inPageTrigger`.
-- [ ] `getContentConfig` returns settings, profiles and the current shortcut (`chrome.commands.getAll`), and the content script calls it lazily.
-- [ ] Command and menu send `openEnhancer`; menu title gets "…".
-- [ ] Migration: `enableContentScript: false` becomes `inPageTrigger: "off"`.
-- [ ] Plain-text and keep-mentions rule in the prompt.
+- [x] `contentScript.sites` profiles (Gmail, Outlook, Slack, Teams), `minField`, `searchPattern`, `sensitivePattern`; `defaults.inPageTrigger`.
+- [x] `getContentConfig` returns settings, profiles and the current shortcut (`chrome.commands.getAll`), and the content script calls it lazily.
+- [x] Command and menu send `openEnhancer`; menu title gets "…".
+- [x] Migration: `enableContentScript: false` becomes `inPageTrigger: "off"`.
+- [x] Plain-text and keep-mentions rule in the prompt.
 
 ### Task 6: Settings page
 
 **Files:** `src/interface/options.html`, `src/scripts/options.js`, `src/styles/options.css`
 
-- [ ] Replace the checkbox with the three-way "Show the ✨ Enhance button" select.
-- [ ] Show the current shortcut with a "Change" button that opens `chrome://extensions/shortcuts`.
+- [x] Replace the checkbox with the three-way "Show the ✨ Enhance button" select.
+- [x] Show the current shortcut with a "Change" button that opens `chrome://extensions/shortcuts`.
 
 ### Task 7: Verification
 
-- [ ] Playwright run against the five editor mocks (Quill, CKEditor 5, Lexical, Gmail-like, textarea) and the misc page (search, small fields, dialog, iframes, layout shift), covering acceptance criteria 1 to 16.
-- [ ] Existing popup, settings, consent and migration suites still pass.
+- [x] Playwright run against the five editor mocks (Quill, CKEditor 5, Lexical, Gmail-like, textarea) and the misc page (search, small fields, dialog, iframes, layout shift), covering acceptance criteria 1 to 16.
+- [x] Existing popup, settings, consent and migration suites still pass.
 - [ ] Manual pass on real Slack, Teams, Gmail and Outlook with debug mode on.
 
 ### Task 8: Release
 
-- [ ] Version bump to 3.1.0 in the manifest and package.json, changelog entry, README and screenshots refreshed.
+- [x] Ships with v3.0.0 (not released yet): changelog entry, README and screenshots refreshed.
