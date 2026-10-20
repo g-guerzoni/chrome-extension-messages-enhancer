@@ -51,12 +51,22 @@
     </div>
 
     <div class="form-group">
-        <label class="checkbox-label">
-            <input type="checkbox" id="content-script">
-            <span class="checkmark"></span>
-            Show enhancement icons on websites
-        </label>
-        <p class="help-text">When enabled, a ✨ icon appears in text fields on websites like Gmail, Slack and Teams. Click it to enhance the text in place (or only the selected part), with an Undo option. The keyboard shortcut and the right-click menu work even when the icon is hidden. Change the shortcut (default Alt+Shift+E) at chrome://extensions/shortcuts.</p>
+        <label for="in-page-trigger">Show the ✨ Enhance button</label>
+        <select id="in-page-trigger">
+            <option value="multiline">On multi-line text fields</option>
+            <option value="sites">Only on Slack, Teams, Gmail and Outlook</option>
+            <option value="off">Never (keyboard shortcut and right-click only)</option>
+        </select>
+        <p class="help-text">The button opens a preview of the enhanced text (or of the selected part). Nothing in the page changes until you press Replace, and Undo puts it back.</p>
+    </div>
+
+    <div class="form-group">
+        <span class="label">Keyboard shortcut</span>
+        <div class="shortcut-row">
+            <kbd id="shortcut">Not set</kbd>
+            <button type="button" id="change-shortcut" class="secondary-button">Change</button>
+        </div>
+        <p class="help-text">Opens the preview for the focused text field. If another extension or your keyboard layout uses the same keys, pick a different shortcut.</p>
     </div>
 
     <div class="form-group">
