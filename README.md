@@ -41,7 +41,7 @@ A Chrome extension that enhances, corrects, and beautifies your text using fast,
 ### Message Customization
 - Multiple tone options:
   - **Neutral**: relaxed and natural, like a clear message to a colleague (default)
-  - **Formal**: polished and professional, with no contractions, but without stiff phrases such as "I hope this message finds you well" or "Kindly"
+  - **Formal**: polished and professional, mostly in full forms (only "I'm" and "we're" are shortened), but without stiff phrases such as "I hope this message finds you well" or "Kindly"
 - Message type adaptation:
   - **Message**: chat messages and short notes, kept as compact as you wrote them
   - **Email**: puts the greeting, paragraphs and sign-off on their own lines; it never adds a greeting, sign-off, subject or signature
