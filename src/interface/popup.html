@@ -4,7 +4,6 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>AI Message Enhancer</title>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
     <link rel="stylesheet" href="../styles/common.css" />
     <link rel="stylesheet" href="../styles/popup.css" />
   </head>
@@ -13,7 +12,7 @@
       <header>
         <h1>AI Message Enhancer</h1>
         <button id="settings-btn" class="icon-button" aria-label="Open settings" title="Settings">
-          <span class="material-icons" aria-hidden="true">settings</span>
+          <svg class="icon" aria-hidden="true"><use href="icons.svg#settings"/></svg>
         </button>
       </header>
 
@@ -22,7 +21,7 @@
           <div class="input-header">
             <label for="input-text">Original Text</label>
             <button id="clean-btn" class="icon-button" aria-label="Clear text" title="Clear text">
-              <span class="material-icons" aria-hidden="true">delete</span>
+              <svg class="icon" aria-hidden="true"><use href="icons.svg#delete"/></svg>
             </button>
           </div>
           <textarea
@@ -90,7 +89,7 @@
           <div class="output-header">
             <label for="output-text">Enhanced Text</label>
             <button id="copy-btn" class="icon-button" aria-label="Copy enhanced text to clipboard" title="Copy to Clipboard">
-              <span class="material-icons" aria-hidden="true">content_copy</span>
+              <svg class="icon" aria-hidden="true"><use href="icons.svg#content_copy"/></svg>
             </button>
           </div>
           <textarea id="output-text" readonly></textarea>

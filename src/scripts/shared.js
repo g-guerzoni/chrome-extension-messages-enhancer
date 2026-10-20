@@ -44,3 +44,8 @@ export async function initTheme() {
     if (area === "sync" && changes.theme) applyTheme(changes.theme.newValue);
   });
 }
+
+// Swaps the sprite icon (src/interface/icons.svg) shown inside a button.
+export function setIcon(button, name) {
+  button.querySelector("svg.icon use").setAttribute("href", `icons.svg#${name}`);
+}

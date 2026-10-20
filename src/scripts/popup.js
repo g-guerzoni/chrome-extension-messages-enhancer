@@ -1,4 +1,4 @@
-import { loadConfig, getActiveModel, getApiKeys, getPrefs, initTheme } from "./shared.js";
+import { loadConfig, getActiveModel, getApiKeys, getPrefs, initTheme, setIcon } from "./shared.js";
 
 const inputText = document.getElementById("input-text");
 const outputText = document.getElementById("output-text");
@@ -138,9 +138,9 @@ async function copyToClipboard() {
 
   try {
     await navigator.clipboard.writeText(outputText.value);
-    copyBtn.querySelector(".material-icons").textContent = "check";
+    setIcon(copyBtn, "check");
     announce("Text copied to clipboard");
-    setTimeout(() => (copyBtn.querySelector(".material-icons").textContent = "content_copy"), 2000);
+    setTimeout(() => setIcon(copyBtn, "content_copy"), 2000);
   } catch {
     showError("Failed to copy text to clipboard.");
   }
