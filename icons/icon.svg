@@ -1,13 +1,14 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <!-- Background circle -->
-    <circle cx="64" cy="64" r="60" fill="#4F46E5"/>
-    
-    <!-- Message bubble -->
-    <path d="M38 42H90C93.3137 42 96 44.6863 96 48V80C96 83.3137 93.3137 86 90 86H70L64 92L58 86H38C34.6863 86 32 83.3137 32 80V48C32 44.6863 34.6863 42 38 42Z" fill="white"/>
-    
-    <!-- Enhancement lines -->
-    <line x1="44" y1="56" x2="84" y2="56" stroke="#4F46E5" stroke-width="4" stroke-linecap="round"/>
-    <line x1="44" y1="64" x2="74" y2="64" stroke="#4F46E5" stroke-width="4" stroke-linecap="round"/>
-    <line x1="44" y1="72" x2="64" y2="72" stroke="#4F46E5" stroke-width="4" stroke-linecap="round"/>
-</svg> 
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <!-- AI Message Enhancer: master icon. Artwork stays inside the 96x96 box (16..112); 16px transparent padding per CWS guidance. -->
+  <!-- Indigo message bubble (same #4f46e5 as the in-page button) -->
+  <g fill="#4f46e5">
+    <circle cx="64" cy="62" r="46"/>
+    <path d="M31 93L20 112L49 103Z"/>
+  </g>
+  <!-- Sparkles (matches the in-page ✨ button) -->
+  <g fill="#fff">
+    <path d="M62 34Q66.48 57.52 90 62Q66.48 66.48 62 90Q57.52 66.48 34 62Q57.52 57.52 62 34Z"/>
+    <path d="M87 26Q89.2 34.8 98 37Q89.2 39.2 87 48Q84.8 39.2 76 37Q84.8 34.8 87 26Z"/>
+    <path d="M89 73.5Q90.21 77.79 94.5 79Q90.21 80.21 89 84.5Q87.79 80.21 83.5 79Q87.79 77.79 89 73.5Z"/>
+  </g>
+</svg>
