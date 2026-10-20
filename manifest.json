@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "AI Message Enhancer",
   "description": "Fix typos, grammar and tone in any text field with AI. Uses your own OpenRouter API key.",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "permissions": ["storage", "contextMenus", "scripting", "activeTab"],
   "action": {
     "default_popup": "src/interface/popup.html",

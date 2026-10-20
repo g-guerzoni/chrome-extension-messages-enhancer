@@ -198,7 +198,7 @@ The extension is built with vanilla JavaScript and follows a clean, modular arch
 
 ## Version History
 
-### Unreleased
+### v3.1.0 (Current)
 
 - **Better Rewrites**: The prompt was rewritten. It fixes awkward and word-for-word translated phrasing instead of only typos, uses plain international English, and the formal tone is professional without being ceremonious.
 - **Enhance Button**: It uses the extension's icon, stands out a little more, and appears while you type in Teams instead of only after the field is focused again.
@@ -206,7 +206,7 @@ The extension is built with vanilla JavaScript and follows a clean, modular arch
 - **Preview**: It moves up when its status line or a warning appears, so it no longer covers the Enhance button.
 - **Popup**: More space between the character count and the options, and a short warning at the bottom when the message box of Slack, Teams, Gmail or Outlook can't get the Enhance button.
 
-### v3.0.0 (Current)
+### v3.0.0
 
 - **OpenRouter**: Grok 4.3 by default, or any OpenRouter model by ID. Settings test the connection, key and model in one click.
 - **In-Page Preview**: The ✨ Enhance button opens a streaming preview with tone, type and translation per site. Nothing in the page changes until you press Replace, and Undo puts it back.
