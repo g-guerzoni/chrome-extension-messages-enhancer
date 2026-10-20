@@ -5,7 +5,8 @@ const modelHelp = document.getElementById("model-help");
 const apiKeysContainer = document.getElementById("api-keys");
 const themeSelect = document.getElementById("theme");
 const keepTextCheckbox = document.getElementById("keep-text");
-const contentScriptCheckbox = document.getElementById("content-script");
+const inPageTriggerSelect = document.getElementById("in-page-trigger");
+const shortcutLabel = document.getElementById("shortcut");
 const debugModeCheckbox = document.getElementById("debug-mode");
 const blockedDomainsTextarea = document.getElementById("blocked-domains");
 const saveButton = document.getElementById("save-btn");
@@ -158,7 +159,7 @@ async function toggleConsent() {
 
 async function loadSettings() {
   const [settings, { model }, apiKeys] = await Promise.all([
-    chrome.storage.sync.get(["theme", "keepTextOnClose", "enableContentScript", "debugMode", "blockedDomains"]),
+    chrome.storage.sync.get(["theme", "keepTextOnClose", "inPageTrigger", "debugMode", "blockedDomains"]),
     chrome.storage.local.get("model"),
     getApiKeys(),
   ]);
@@ -167,7 +168,7 @@ async function loadSettings() {
   modelSelect.value = models.models.some((m) => m.id === model) ? model : models.defaultModel;
   themeSelect.value = settings.theme ?? defaults.theme;
   keepTextCheckbox.checked = settings.keepTextOnClose ?? defaults.keepTextOnClose;
-  contentScriptCheckbox.checked = settings.enableContentScript ?? defaults.enableContentScript;
+  inPageTriggerSelect.value = settings.inPageTrigger ?? defaults.inPageTrigger;
   debugModeCheckbox.checked = settings.debugMode ?? defaults.debugMode;
   blockedDomainsTextarea.value = settings.blockedDomains ?? "";
   for (const [providerId, input] of Object.entries(apiKeyInputs)) input.value = apiKeys[providerId] ?? "";
@@ -219,7 +220,7 @@ async function saveSettings() {
       chrome.storage.sync.set({
         theme: themeSelect.value,
         keepTextOnClose: keepTextCheckbox.checked,
-        enableContentScript: contentScriptCheckbox.checked,
+        inPageTrigger: inPageTriggerSelect.value,
         debugMode: debugModeCheckbox.checked,
         blockedDomains,
       }),
@@ -238,6 +239,11 @@ modelSelect.addEventListener("change", updateModelHelp);
 themeSelect.addEventListener("change", () => applyTheme(themeSelect.value));
 saveButton.addEventListener("click", saveSettings);
 consentButton.addEventListener("click", toggleConsent);
+// Extension pages may open chrome:// URLs through the tabs API, not through links.
+document.getElementById("change-shortcut").addEventListener("click", () => chrome.tabs.create({ url: "chrome://extensions/shortcuts" }));
+chrome.commands.getAll().then((commands) => {
+  shortcutLabel.textContent = commands.find((c) => c.name === "enhance-field")?.shortcut || "Not set";
+});
 document.querySelector("main").addEventListener("input", () => setDirty(true));
 addEventListener("beforeunload", (event) => {
   if (dirty) event.preventDefault();
