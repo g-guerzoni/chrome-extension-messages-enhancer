@@ -292,6 +292,16 @@ fieldset legend {
   display: none;
 }
 
+.page-warning {
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  color: var(--error-text);
+}
+
+.page-warning[hidden] {
+  display: none;
+}
+
 .notice a,
 .link-button {
   color: var(--link-color);

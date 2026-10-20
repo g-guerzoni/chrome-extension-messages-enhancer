@@ -47,6 +47,7 @@
   let positionFrame = 0;
   let resizeObserver = null;
   let fieldObserver = null;
+  let composerNote; // undefined until the first check, so a stale note is cleared once per page
   let ui = null;
   let session = null;
 
@@ -62,6 +63,7 @@
           ...value,
           searchPattern: new RegExp(value.searchPattern, "i"),
           sensitivePattern: new RegExp(value.sensitivePattern, "i"),
+          composerPattern: new RegExp(value.composerPattern, "i"),
           blockedDomains: parseBlockedDomains(value.blockedDomains),
         };
         return config;
@@ -146,28 +148,53 @@
     if (!config || config.inPageTrigger === "off") return false;
     if (config.inPageTrigger === "sites" && !siteProfile()) return false;
     if (isSensitiveSite() || isBlockedByUser()) return false;
-    if (field instanceof HTMLInputElement || !isMultiline(field) || isWidget(field)) return false;
+    if (field instanceof HTMLInputElement) return false;
     if (field.getAttribute("aria-readonly") === "true" || field.getAttribute("aria-disabled") === "true") return false;
     if (config.searchPattern.test(describe(field))) return false;
     // Editors and pickers often keep an off-screen or transparent field focused to capture keys.
     if (field.checkVisibility?.({ opacityProperty: true, visibilityProperty: true }) === false) return false;
-
     const rect = rectOf(field);
-    return rect.width >= config.minField.width && rect.height >= config.minField.height;
+    if (rect.width < config.minField.width || rect.height < config.minField.height) return false;
+
+    const reason = notTextReason(field);
+    noteComposer(field, reason);
+    return !reason;
   }
 
-  function isMultiline(field) {
-    return field instanceof HTMLTextAreaElement || field.getAttribute("aria-multiline") !== "false";
-  }
-
-  function isWidget(field) {
-    if (WIDGET_ROLES.has(field.getAttribute("role"))) return true;
-    if (field.parentElement?.closest(WIDGET_CONTAINERS)) return true;
+  // Why a field is not a multi-line free-text box (pickers, toggles, menus, grid cells), or null.
+  function notTextReason(field) {
+    if (!(field instanceof HTMLTextAreaElement) && field.getAttribute("aria-multiline") === "false") {
+      return 'is marked as single-line (aria-multiline="false")';
+    }
+    const role = field.getAttribute("role");
+    if (WIDGET_ROLES.has(role)) return `has role="${role}"`;
+    const container = field.parentElement?.closest(WIDGET_CONTAINERS);
+    if (container) return `is inside role="${container.getAttribute("role")}"`;
     // A field that opens suggestions is a picker, unless it is a textarea or declares itself a text
     // box (composers with @mention suggestions do).
     const opensPopup = field.hasAttribute("aria-autocomplete") || (field.getAttribute("aria-haspopup") ?? "false") !== "false";
-    const isTextBox = field instanceof HTMLTextAreaElement || field.getAttribute("role") === "textbox" || field.getAttribute("aria-multiline") === "true";
-    return opensPopup && !isTextBox;
+    const isTextBox = field instanceof HTMLTextAreaElement || role === "textbox" || field.getAttribute("aria-multiline") === "true";
+    return opensPopup && !isTextBox ? "opens suggestions without being a text box" : null;
+  }
+
+  // On Slack, Teams, Gmail and Outlook the message box should always get the button. If the rules
+  // above turn it away, the site's markup has likely changed: leave a note the popup shows, and
+  // clear it once the button shows there again.
+  function noteComposer(field, reason) {
+    if (!siteProfile()) return;
+    const label = [describe(field), field.getAttribute("aria-placeholder"), field.getAttribute("data-placeholder")].join(" ");
+    if (!config.composerPattern.test(label) || composerNote === reason) return;
+    composerNote = reason;
+    const host = location.hostname;
+    chrome.storage.local
+      .get("pillWarnings")
+      .then(({ pillWarnings = {} }) => {
+        if (!reason && !pillWarnings[host]) return;
+        if (reason) pillWarnings[host] = { reason, at: Date.now() };
+        else delete pillWarnings[host];
+        return chrome.storage.local.set({ pillWarnings });
+      })
+      .catch(() => {});
   }
 
   // An editable <body> (iframe editors) is only as tall as its text; its frame's viewport is the field.

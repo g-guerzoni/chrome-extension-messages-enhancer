@@ -13,7 +13,7 @@ AI Message Enhancer is a Chrome extension that improves the grammar, clarity and
 - If "Keep text when extension closes" is on, the popup's input and output text are stored on your device only.
 
 ### Settings
-- **On this device only** (Chrome local storage): your OpenRouter API key, the selected model, your consent to the data notice, the tone, type and translation you pick in the in-page preview for each site, and the popup's saved text.
+- **On this device only** (Chrome local storage): your OpenRouter API key, the selected model, your consent to the data notice, the tone, type and translation you pick in the in-page preview for each site, the popup's saved text, and the host name of Slack, Teams, Gmail or Outlook with a short reason when their message box can't get the Enhance button.
 - **Synced with your Google account** (Chrome sync storage, if Chrome Sync is on): theme, tone, message type, translation, website integration settings, blocked domains and debug mode.
 
 ### What the extension does not do

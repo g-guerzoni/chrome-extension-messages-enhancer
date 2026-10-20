@@ -18,6 +18,7 @@ const setupNotice = document.getElementById("setup-notice");
 const setupMessage = document.getElementById("setup-message");
 const setupKey = document.getElementById("setup-key");
 const setupKeyLink = document.getElementById("setup-key-link");
+const pageWarning = document.getElementById("page-warning");
 const buttonText = enhanceBtn.querySelector(".button-text");
 
 let keepTextOnClose = true;
@@ -210,6 +211,20 @@ async function refreshModelStatus() {
   setupKeyLink.href = provider.keyUrl;
 }
 
+// content.js leaves a note when the message box of Slack, Teams, Gmail or Outlook no longer
+// qualifies for the Enhance button (the site's markup changed); show it for the current tab.
+async function showPageWarning(shortcut) {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (!/^https?:/.test(tab?.url ?? "")) return;
+  const { hostname } = new URL(tab.url);
+  const { pillWarnings = {} } = await chrome.storage.local.get("pillWarnings");
+  const warning = pillWarnings[hostname];
+  if (!warning) return;
+  const fallback = shortcut ? `${shortcut} or right-click` : "right-click";
+  pageWarning.textContent = `Enhance button hidden on ${hostname}: the message box ${warning.reason}. Use ${fallback} instead.`;
+  pageWarning.hidden = false;
+}
+
 async function init() {
   initTheme();
 
@@ -226,6 +241,7 @@ async function init() {
 
   const shortcut = commands.find((c) => c.name === "enhance-field")?.shortcut;
   if (shortcut) shortcutHint.textContent = ` · ${shortcut} enhances any text field`;
+  showPageWarning(shortcut).catch(() => {});
 
   keepTextOnClose = settings.keepTextOnClose !== false;
   if (keepTextOnClose) await loadText();

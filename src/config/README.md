@@ -58,6 +58,10 @@ also carries the user's settings, the model name and the current keyboard shortc
   - `searchPattern` and `sensitivePattern`: case-insensitive regular expressions matched against a
     field's name, id, autocomplete, aria-label and placeholder. Search-like fields get no button;
     sensitive ones are never enhanced.
+  - `composerPattern`: on the `sites` hosts, a field whose label or placeholder matches it is the
+    site's message box. If the rules above turn it away, `content.js` stores the host and the reason
+    in `storage.local.pillWarnings` and the popup shows it as a warning; the note is removed once the
+    button shows there again.
   - `excludedContent`: mail signatures and quoted replies that are never sent or rewritten.
   - `sites`: per-site profiles. `type` is the default message type there, and these hosts are the
     ones used by the "Only on Slack, Teams, Gmail and Outlook" setting.

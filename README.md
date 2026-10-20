@@ -128,6 +128,7 @@ If a model refuses to turn reasoning off or to stream, the request is retried wi
 ### Website Integration
 - **Where the button shows**: multi-line text fields and rich editors that are big enough and visible; never on search boxes, single-line inputs, tiny or hidden fields, or on pickers and widgets that happen to be editable (comboboxes, tag pickers, menus, checkboxes, grid cells, read-only fields). The shortcut and the right-click menu work on any text field
 - **Shows while you type**: the button appears once the field has a few characters, also in editors that write the page themselves instead of firing input events (Teams)
+- **Site change warning**: if the message box on Slack, Teams, Gmail or Outlook stops qualifying for the button (usually after a site update), the popup shows a short warning at the bottom with the reason; the shortcut and right-click menu keep working
 - **Rich editors**: text goes in through the editor's own paste handling (Slack, Teams, Lexical-based apps), and the result is checked afterwards. If a site refuses it, the text is copied to the clipboard instead and nothing in the field changes
 - **Performance optimized**: no page polling; the script reacts when a text field gets focus and only watches that field while it has focus
 - Password, one-time-code, card and similar fields are ignored, as are sites whose host looks like banking or login pages
@@ -203,7 +204,7 @@ The extension is built with vanilla JavaScript and follows a clean, modular arch
 - **Enhance Button**: It uses the extension's icon, stands out a little more, and appears while you type in Teams instead of only after the field is focused again.
 - **Fewer False Positives**: The button no longer shows on comboboxes, tag pickers, checkboxes, menus, grid cells, single-line, read-only or hidden editable fields, and is no longer skipped on message boxes that offer @mention suggestions.
 - **Preview**: It moves up when its status line or a warning appears, so it no longer covers the Enhance button.
-- **Popup**: More space between the character count and the options.
+- **Popup**: More space between the character count and the options, and a short warning at the bottom when the message box of Slack, Teams, Gmail or Outlook can't get the Enhance button.
 
 ### v3.0.0 (Current)
 
