@@ -24,73 +24,100 @@
             <button type="button" id="consent-btn">OK</button>
         </section>
 
-        <div class="form-group">
-            <label for="model">Model</label>
-            <select id="model"></select>
-            <p id="model-help" class="help-text"></p>
-        </div>
+        <section class="settings-section" aria-labelledby="model-title">
+            <header>
+                <h2 id="model-title">AI model</h2>
+                <p class="section-description">Which model enhances your text, and the API key it uses.</p>
+            </header>
 
-        <div id="api-keys"></div>
+            <div class="form-group">
+                <label for="model">Model</label>
+                <select id="model"></select>
+                <p id="model-help" class="help-text"></p>
+            </div>
 
-    <div class="form-group">
-        <label for="theme">Theme</label>
-        <select id="theme">
-            <option value="system">System Default</option>
-            <option value="light">Light</option>
-            <option value="dark">Dark</option>
-        </select>
-    </div>
+            <div id="api-keys"></div>
+        </section>
 
-    <div class="form-group">
-        <label class="checkbox-label">
-            <input type="checkbox" id="keep-text">
-            <span class="checkmark"></span>
-            Keep text when extension closes
-        </label>
-        <p class="help-text">When enabled, your input and enhanced text will be saved and restored when you reopen the extension.</p>
-    </div>
+        <section class="settings-section" aria-labelledby="websites-title">
+            <header>
+                <h2 id="websites-title">On websites</h2>
+                <p class="section-description">How you enhance text in Slack, Teams, Gmail and other sites.</p>
+            </header>
 
-    <div class="form-group">
-        <label for="in-page-trigger">Show the ✨ Enhance button</label>
-        <select id="in-page-trigger">
-            <option value="multiline">On multi-line text fields</option>
-            <option value="sites">Only on Slack, Teams, Gmail and Outlook</option>
-            <option value="off">Never (keyboard shortcut and right-click only)</option>
-        </select>
-        <p class="help-text">The button opens a preview of the enhanced text (or of the selected part). Nothing in the page changes until you press Replace, and Undo puts it back.</p>
-    </div>
+            <div class="form-group">
+                <label for="in-page-trigger">Show the ✨ Enhance button</label>
+                <select id="in-page-trigger">
+                    <option value="multiline">On multi-line text fields</option>
+                    <option value="sites">Only on Slack, Teams, Gmail and Outlook</option>
+                    <option value="off">Never (keyboard shortcut and right-click only)</option>
+                </select>
+                <p class="help-text">The button opens a preview of the enhanced text (or of the selected part). Nothing in the page changes until you press Replace, and Undo puts it back.</p>
+            </div>
 
-    <div class="form-group">
-        <span class="label">Keyboard shortcut</span>
-        <div class="shortcut-row">
-            <kbd id="shortcut">Not set</kbd>
-            <button type="button" id="change-shortcut" class="secondary-button">Change</button>
-        </div>
-        <p class="help-text">Opens the preview for the focused text field. If another extension or your keyboard layout uses the same keys, pick a different shortcut.</p>
-    </div>
+            <div class="form-group">
+                <span class="label">Keyboard shortcut</span>
+                <div class="shortcut-row">
+                    <kbd id="shortcut">Not set</kbd>
+                    <button type="button" id="change-shortcut" class="secondary-button">Change</button>
+                </div>
+                <p class="help-text">Opens the preview for the focused text field. If another extension or your keyboard layout uses the same keys, pick a different shortcut.</p>
+            </div>
 
-    <div class="form-group">
-        <label class="checkbox-label">
-            <input type="checkbox" id="debug-mode">
-            <span class="checkmark"></span>
-            Enable debug logging
-        </label>
-        <p class="help-text">When enabled, request timings are logged to the extension's service worker console.</p>
-    </div>
+            <div class="form-group">
+                <label for="blocked-domains">Hide the button on these sites</label>
+                <textarea
+                    id="blocked-domains"
+                    placeholder="e.g. github.com, twitter.com/compose, localhost:3000"
+                    rows="3"
+                ></textarea>
+                <p class="help-text">Separate entries with commas. Use a domain (github.com) for a whole site, add a path (github.com/user/repo) for specific pages, or a port (localhost:3000) for local development. The shortcut and the right-click menu still work there.</p>
+            </div>
+        </section>
 
-    <div class="form-group">
-        <label for="blocked-domains">Blocked Domains</label>
-        <textarea 
-            id="blocked-domains" 
-            placeholder="Enter domains to block, separated by commas (e.g., github.com, twitter.com/compose, facebook.com)"
-            rows="3"
-        ></textarea>
-        <p class="help-text">The ✨ Enhance button is hidden on these domains. Use full domains (github.com) to block entire sites, include paths (github.com/user/repo) to block specific pages, or specify ports (localhost:3000) for local development.</p>
-    </div>
+        <section class="settings-section" aria-labelledby="popup-title">
+            <header>
+                <h2 id="popup-title">Popup and appearance</h2>
+            </header>
 
-        <button id="save-btn">Save Settings</button>
+            <div class="form-group">
+                <label for="theme">Theme</label>
+                <select id="theme">
+                    <option value="system">System Default</option>
+                    <option value="light">Light</option>
+                    <option value="dark">Dark</option>
+                </select>
+            </div>
 
-        <div id="status" class="status" role="status" aria-live="polite" aria-atomic="true"></div>
+            <div class="form-group">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="keep-text">
+                    <span class="checkmark"></span>
+                    Keep text when the popup closes
+                </label>
+                <p class="help-text">Your input and enhanced text are saved on this device and restored when you reopen the popup.</p>
+            </div>
+        </section>
+
+        <section class="settings-section" aria-labelledby="advanced-title">
+            <header>
+                <h2 id="advanced-title">Advanced</h2>
+            </header>
+
+            <div class="form-group">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="debug-mode">
+                    <span class="checkmark"></span>
+                    Enable debug logging
+                </label>
+                <p class="help-text">Logs request timings and errors to the extension's service worker console.</p>
+            </div>
+        </section>
+
+        <footer class="actions">
+            <button id="save-btn">Save Settings</button>
+            <div id="status" class="status" role="status" aria-live="polite" aria-atomic="true"></div>
+        </footer>
     </main>
 
     <script src="../scripts/options.js" type="module"></script>
