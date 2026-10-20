@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="system">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Message Enhancer</title>
+    <title>AI Message Enhancer</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
     <link rel="stylesheet" href="../styles/common.css" />
     <link rel="stylesheet" href="../styles/popup.css" />
@@ -11,7 +11,7 @@
   <body>
     <div class="container">
       <header>
-        <h1>Message Enhancer</h1>
+        <h1>AI Message Enhancer</h1>
         <button id="settings-btn" class="icon-button" aria-label="Open settings" title="Settings">
           <span class="material-icons" aria-hidden="true">settings</span>
         </button>
@@ -21,16 +21,16 @@
         <div class="input-section">
           <div class="input-header">
             <label for="input-text">Original Text</label>
-            <button id="clean-btn" class="icon-button" aria-label="Clear all text" title="Clean All Text">
+            <button id="clean-btn" class="icon-button" aria-label="Clear text" title="Clear text">
               <span class="material-icons" aria-hidden="true">delete</span>
             </button>
           </div>
           <textarea
             id="input-text"
-            placeholder="Enter your message here"
+            placeholder="Type or paste your message. Enter to enhance, Shift+Enter for a new line."
             aria-describedby="char-count-display"
           ></textarea>
-          <div id="char-count-display" class="char-count" aria-live="polite" aria-atomic="true">
+          <div id="char-count-display" class="char-count">
             <span id="char-count">0</span>/<span id="char-limit"></span> characters
           </div>
         </div>
@@ -75,9 +75,15 @@
 
         <div id="error-message" class="error-message" role="alert"></div>
 
-        <button id="enhance-btn" class="primary-button" aria-label="Enhance message">
-          <span class="button-text">Enhance Message (press Enter)</span>
-          <div class="loading-spinner" role="status" aria-label="Processing"></div>
+        <div id="setup-notice" class="notice" hidden>
+          Add your <span id="setup-provider"></span> API key to start.
+          <button type="button" id="setup-settings" class="link-button">Open settings</button> ·
+          <a id="setup-key-link" target="_blank" rel="noopener">Get a key</a>
+        </div>
+
+        <button id="enhance-btn" class="primary-button">
+          <span class="button-text">Enhance</span>
+          <div class="loading-spinner" aria-hidden="true"></div>
         </button>
 
         <div class="output-section" role="region" aria-label="Enhanced text output">

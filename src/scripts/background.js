@@ -155,7 +155,9 @@ async function readApiError(response, provider) {
   try {
     return JSON.parse(body).error?.message || `API request failed (${response.status}).`;
   } catch {
-    return `API request failed (${response.status}): ${body.slice(0, 200) || response.statusText}`;
+    // Gateways often answer with an HTML page; it is noise in the popup.
+    const detail = body.trimStart().startsWith("<") ? response.statusText : body.slice(0, 200);
+    return `API request failed (${response.status})${detail ? `: ${detail}` : "."}`;
   }
 }
 

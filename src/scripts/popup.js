@@ -14,9 +14,12 @@ const errorMessage = document.getElementById("error-message");
 const statusAnnouncer = document.getElementById("status-announcer");
 const modelName = document.getElementById("model-name");
 const shortcutHint = document.getElementById("shortcut-hint");
+const setupNotice = document.getElementById("setup-notice");
+const setupProvider = document.getElementById("setup-provider");
+const setupKeyLink = document.getElementById("setup-key-link");
+const buttonText = enhanceBtn.querySelector(".button-text");
 
 let keepTextOnClose = true;
-let errorTimer = null;
 
 function debounce(func, wait) {
   let timeout;
@@ -30,18 +33,22 @@ const debouncedSaveText = debounce(saveText, 500);
 
 inputText.addEventListener("input", () => {
   updateCharCount();
+  hideError();
   debouncedSaveText();
 });
 inputText.addEventListener("keydown", (event) => {
+  // Enter also confirms IME candidates (e.g. Japanese, Chinese); don't treat that as "enhance".
+  if (event.isComposing || event.keyCode === 229) return;
   if (event.key === "Enter" && !event.shiftKey) {
     event.preventDefault();
-    enhanceText();
+    if (!enhanceBtn.disabled) enhanceText();
   }
 });
 enhanceBtn.addEventListener("click", enhanceText);
 copyBtn.addEventListener("click", copyToClipboard);
 cleanBtn.addEventListener("click", cleanAllText);
 settingsBtn.addEventListener("click", () => chrome.runtime.openOptionsPage());
+document.getElementById("setup-settings").addEventListener("click", () => chrome.runtime.openOptionsPage());
 optionInputs.forEach((input) => input.addEventListener("change", savePrefs));
 
 function announce(message) {
@@ -49,11 +56,14 @@ function announce(message) {
   setTimeout(() => (statusAnnouncer.textContent = ""), 1000);
 }
 
+// Errors stay until the user edits the text or runs again, so they can be read.
 function showError(message) {
   errorMessage.textContent = message;
   errorMessage.style.display = "block";
-  clearTimeout(errorTimer);
-  errorTimer = setTimeout(() => (errorMessage.style.display = "none"), 5000);
+}
+
+function hideError() {
+  errorMessage.style.display = "none";
 }
 
 function updateCharCount() {
@@ -82,6 +92,9 @@ function savePrefs() {
 }
 
 function enhanceText() {
+  if (enhanceBtn.classList.contains("loading")) return;
+  hideError();
+
   const text = inputText.value.trim();
   if (!text) {
     showError("Please enter some text to enhance.");
@@ -89,12 +102,15 @@ function enhanceText() {
   }
 
   setLoading(true);
-  outputText.value = "";
   copyBtn.disabled = true;
+  let receivedDelta = false;
 
   const port = chrome.runtime.connect({ name: "enhance" });
   port.onMessage.addListener((message) => {
     if (message.delta) {
+      // Clear only once text arrives, so a failed retry keeps the previous result.
+      if (!receivedDelta) outputText.value = "";
+      receivedDelta = true;
       outputText.value += message.delta;
       outputText.scrollTop = outputText.scrollHeight;
       return;
@@ -102,8 +118,10 @@ function enhanceText() {
 
     if (message.error) {
       showError(message.error);
+      copyBtn.disabled = !outputText.value;
     } else {
       outputText.value = message.text;
+      outputText.scrollTop = 0;
       copyBtn.disabled = false;
       announce("Text enhancement complete");
       saveText();
@@ -133,16 +151,18 @@ function cleanAllText() {
   outputText.value = "";
   updateCharCount();
   copyBtn.disabled = true;
-  translateCheckbox.checked = false;
-  savePrefs();
+  hideError();
   saveText();
+  inputText.focus();
 }
 
 function setLoading(isLoading) {
   enhanceBtn.disabled = isLoading;
   enhanceBtn.classList.toggle("loading", isLoading);
   enhanceBtn.setAttribute("aria-busy", String(isLoading));
-  inputText.disabled = isLoading;
+  buttonText.textContent = isLoading ? "Enhancing…" : "Enhance";
+  // readOnly instead of disabled keeps focus in the textarea for the next Enter.
+  inputText.readOnly = isLoading;
   cleanBtn.disabled = isLoading;
   optionInputs.forEach((input) => (input.disabled = isLoading));
   if (isLoading) announce("Processing your text, please wait");
@@ -167,13 +187,13 @@ async function loadText() {
 async function refreshModelStatus() {
   const [model, apiKeys, { config }] = await Promise.all([getActiveModel(), getApiKeys(), loadConfig()]);
   const hasApiKey = Boolean(apiKeys[model.provider]);
-  const providerName = config.providers[model.provider].name;
+  const provider = config.providers[model.provider];
 
-  modelName.textContent = `${model.name} (${providerName})`;
+  modelName.textContent = `${model.name} (${provider.name})`;
   enhanceBtn.disabled = !hasApiKey;
-  enhanceBtn.title = hasApiKey ? "Enhance Message" : `Please set your ${providerName} API key in settings`;
-  settingsBtn.style.animation = hasApiKey ? "" : "pulse 2s infinite";
-  if (!hasApiKey) showError(`Please set your ${providerName} API key in the extension settings.`);
+  setupNotice.hidden = hasApiKey;
+  setupProvider.textContent = provider.name;
+  setupKeyLink.href = provider.keyUrl;
 }
 
 async function init() {
