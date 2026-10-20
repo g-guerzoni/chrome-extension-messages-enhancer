@@ -15,10 +15,10 @@
             <h2 id="data-notice-title">How your text is handled</h2>
             <p>
                 When you press Enhance in the popup, click ✨ Enhance next to a text field, press the keyboard shortcut or use the
-                right-click menu, the text of that field (or your selection) is sent with your API key to the
-                provider of the model you chose: OpenRouter, which forwards it to the model's maker (xAI, Google,
-                OpenAI or Anthropic), or OpenAI directly. Nothing is sent before one of those actions, and nothing
-                is ever sent to the extension's developer.
+                right-click menu, the text of that field (or your selection) is sent with your API key to
+                OpenRouter, which forwards it to the maker of the model you chose (xAI for Grok, or the provider of
+                any other model you enter). Nothing is sent before one of those actions, and nothing is ever sent
+                to the extension's developer.
             </p>
             <p id="consent-status" class="help-text"></p>
             <button type="button" id="consent-btn">OK</button>
@@ -36,7 +36,18 @@
                 <p id="model-help" class="help-text"></p>
             </div>
 
+            <div class="form-group" id="custom-model-group" hidden>
+                <label for="custom-model">OpenRouter model ID</label>
+                <input type="text" id="custom-model" autocomplete="off" spellcheck="false">
+                <p class="help-text">Copy the ID from <a id="models-link" target="_blank" rel="noopener">openrouter.ai/models</a>. Pricing depends on the model; models that need "reasoning" are slower.</p>
+            </div>
+
             <div id="api-keys"></div>
+
+            <div class="form-group test-row">
+                <button type="button" id="test-connection" class="secondary-button">Test connection</button>
+                <span id="test-result" class="test-result" role="status" aria-live="polite"></span>
+            </div>
         </section>
 
         <section class="settings-section" aria-labelledby="websites-title">

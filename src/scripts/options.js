@@ -1,7 +1,13 @@
-import { loadConfig, getApiKeys, formatPrice, applyTheme, setIcon, DATA_CONSENT_VERSION } from "./shared.js";
+import { loadConfig, getApiKeys, formatPrice, applyTheme, setIcon, resolveModel, DATA_CONSENT_VERSION } from "./shared.js";
+
+const CUSTOM_MODEL = "custom";
 
 const modelSelect = document.getElementById("model");
 const modelHelp = document.getElementById("model-help");
+const customModelGroup = document.getElementById("custom-model-group");
+const customModelInput = document.getElementById("custom-model");
+const testButton = document.getElementById("test-connection");
+const testResult = document.getElementById("test-result");
 const apiKeysContainer = document.getElementById("api-keys");
 const themeSelect = document.getElementById("theme");
 const keepTextCheckbox = document.getElementById("keep-text");
@@ -17,7 +23,6 @@ const consentButton = document.getElementById("consent-btn");
 
 const { config, models } = await loadConfig();
 const apiKeyInputs = {};
-const apiKeyLabels = {};
 // Rough per-message cost: the system prompt plus a short message in, a similar message out.
 const TYPICAL_TOKENS = { input: 1500, output: 150 };
 
@@ -27,14 +32,12 @@ let dirty = false;
 document.getElementById("version").textContent = `v${chrome.runtime.getManifest().version}`;
 
 function renderModelOptions() {
-  for (const [providerId, provider] of Object.entries(config.providers)) {
-    const group = document.createElement("optgroup");
-    group.label = provider.name;
-    for (const model of models.models.filter((m) => m.provider === providerId)) {
-      group.append(new Option(model.id === models.defaultModel ? `${model.name} (Recommended)` : model.name, model.id));
-    }
-    modelSelect.append(group);
+  for (const model of models.models) {
+    modelSelect.append(new Option(model.id === models.defaultModel ? `${model.name} (Recommended)` : model.name, model.id));
   }
+  modelSelect.append(new Option("Other OpenRouter model…", CUSTOM_MODEL));
+  customModelInput.placeholder = `e.g. ${models.customModel.example}`;
+  document.getElementById("models-link").href = config.providers[models.customModel.provider].modelsUrl;
 }
 
 function renderApiKeyFields() {
@@ -81,26 +84,50 @@ function renderApiKeyFields() {
     group.append(label, wrapper, help);
     apiKeysContainer.append(group);
     apiKeyInputs[providerId] = input;
-    apiKeyLabels[providerId] = label;
   }
 }
 
-function selectedModel() {
-  return models.models.find((m) => m.id === modelSelect.value);
+function selectedModelId() {
+  return modelSelect.value === CUSTOM_MODEL ? customModelInput.value.trim() : modelSelect.value;
 }
 
 function updateModelHelp() {
-  const model = selectedModel();
+  const custom = modelSelect.value === CUSTOM_MODEL;
+  customModelGroup.hidden = !custom;
+  modelHelp.hidden = custom;
+  testResult.textContent = "";
+  if (custom) return;
+
+  const model = models.models.find((m) => m.id === modelSelect.value);
   const { input, output } = model.pricing;
   const messagesPerDollar = Math.round(1e6 / (TYPICAL_TOKENS.input * input + TYPICAL_TOKENS.output * output));
   const estimate = `about ${messagesPerDollar.toLocaleString("en-US")} messages per $1`;
-
   modelHelp.textContent = [model.note, formatPrice(model.pricing), estimate].filter(Boolean).join(" · ");
-  for (const [providerId, input] of Object.entries(apiKeyInputs)) {
-    const needed = providerId === model.provider;
-    input.required = needed;
-    apiKeyLabels[providerId].textContent = `${config.providers[providerId].name} API Key ${needed ? "(required for this model)" : "(optional)"}`;
-  }
+}
+
+function rejectCustomModel() {
+  customModelInput.setAttribute("aria-invalid", "true");
+  customModelInput.focus();
+  showStatus(`Enter an OpenRouter model ID like ${models.customModel.example}.`, "error");
+}
+
+// Sends a tiny request with the values in the form, saved or not.
+async function testConnection() {
+  const model = resolveModel(models, selectedModelId());
+  if (!model) return rejectCustomModel();
+  const apiKey = apiKeyInputs[model.provider].value.trim();
+
+  testButton.disabled = true;
+  testResult.className = "test-result";
+  testResult.textContent = "Testing…";
+  const result = (await chrome.runtime
+    .sendMessage({ action: "testConnection", data: { modelId: model.id, apiKey } })
+    .catch(() => null)) ?? { error: "The extension did not answer. Reload it and try again." };
+  testButton.disabled = false;
+  testResult.className = `test-result ${result.error ? "error" : "success"}`;
+  testResult.textContent = result.error
+    ? `✗ ${result.error}`
+    : `✓ Connected. ${result.model} answered in ${(result.ms / 1000).toFixed(1)} s.`;
 }
 
 function validateDomains(domainsString) {
@@ -160,7 +187,9 @@ async function loadSettings() {
   ]);
   const { defaults } = config;
 
-  modelSelect.value = models.models.some((m) => m.id === model) ? model : models.defaultModel;
+  const active = resolveModel(models, model) ?? resolveModel(models, models.defaultModel);
+  modelSelect.value = active.custom ? CUSTOM_MODEL : active.id;
+  customModelInput.value = active.custom ? active.id : "";
   themeSelect.value = settings.theme ?? defaults.theme;
   keepTextCheckbox.checked = settings.keepTextOnClose ?? defaults.keepTextOnClose;
   inPageTriggerSelect.value = settings.inPageTrigger ?? defaults.inPageTrigger;
@@ -173,21 +202,14 @@ async function loadSettings() {
 }
 
 async function saveSettings() {
-  const model = selectedModel();
+  const model = resolveModel(models, selectedModelId());
+  if (!model) return rejectCustomModel();
   const apiKeys = {};
 
   for (const [providerId, input] of Object.entries(apiKeyInputs)) {
     const key = input.value.trim();
     const provider = config.providers[providerId];
     if (!key) continue;
-    // OpenRouter keys ("sk-or-") also start with OpenAI's "sk-", so check the more specific prefixes too.
-    const otherProvider = Object.entries(config.providers).find(
-      ([id, other]) => id !== providerId && other.keyPrefix.length > provider.keyPrefix.length && key.startsWith(other.keyPrefix)
-    );
-    if (otherProvider) {
-      rejectKey(providerId, `This looks like an ${otherProvider[1].name} key. Paste it in the ${otherProvider[1].name} field.`);
-      return;
-    }
     if (!key.startsWith(provider.keyPrefix) || key.length < 20) {
       rejectKey(providerId, `Invalid ${provider.name} API key. It should start with "${provider.keyPrefix}".`);
       return;
@@ -231,6 +253,11 @@ async function saveSettings() {
 renderModelOptions();
 renderApiKeyFields();
 modelSelect.addEventListener("change", updateModelHelp);
+customModelInput.addEventListener("input", () => {
+  customModelInput.removeAttribute("aria-invalid");
+  testResult.textContent = "";
+});
+testButton.addEventListener("click", testConnection);
 themeSelect.addEventListener("change", () => applyTheme(themeSelect.value));
 saveButton.addEventListener("click", saveSettings);
 consentButton.addEventListener("click", acceptConsent);

@@ -20,6 +20,25 @@ h1 {
     font-size: 0.875rem;
 }
 
+.test-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.test-result {
+    font-size: 0.8125rem;
+    color: var(--secondary-text);
+}
+
+.test-result.success {
+    color: var(--success-text);
+}
+
+.test-result.error {
+    color: var(--error-text);
+}
+
 .shortcut-row {
     display: flex;
     align-items: center;

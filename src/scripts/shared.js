@@ -18,11 +18,19 @@ export function loadConfig() {
   return configPromise;
 }
 
+// A listed model, or any OpenRouter model ID the user typed ("vendor/model"); null otherwise.
+export function resolveModel(models, id) {
+  const listed = models.models.find((m) => m.id === id);
+  if (listed) return listed;
+  const { provider, pattern } = models.customModel;
+  return id && new RegExp(pattern, "i").test(id) ? { id, name: id, provider, params: {}, custom: true } : null;
+}
+
 // The model lives in local storage next to the API keys, so a synced choice can never point
 // at a provider whose key only exists on another device.
 export async function getActiveModel() {
   const [{ models }, { model }] = await Promise.all([loadConfig(), chrome.storage.local.get("model")]);
-  return models.models.find((m) => m.id === model) ?? models.models.find((m) => m.id === models.defaultModel);
+  return resolveModel(models, model) ?? resolveModel(models, models.defaultModel);
 }
 
 export async function getApiKeys() {

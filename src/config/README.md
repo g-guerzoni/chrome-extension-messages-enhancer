@@ -60,15 +60,19 @@ also carries the user's settings, the model name and the current keyboard shortc
 
 ```json
 {
-  "defaultModel": "x-ai/grok-4.1-fast",
-  "legacyDefaultModel": "gpt-5-nano-2025-08-07",
+  "defaultModel": "x-ai/grok-4.3",
+  "customModel": {
+    "provider": "openrouter",
+    "pattern": "^[a-z0-9][a-z0-9._-]*/[a-z0-9][a-z0-9._:-]*$",
+    "example": "google/gemini-3.1-flash-lite"
+  },
   "models": [
     {
-      "id": "x-ai/grok-4.1-fast",
-      "name": "Grok 4.1 Fast",
+      "id": "x-ai/grok-4.3",
+      "name": "Grok 4.3",
       "provider": "openrouter",
-      "pricing": { "input": 0.2, "output": 0.5 },
-      "note": "Recommended: fast, cheapest output",
+      "pricing": { "input": 1.25, "output": 2.5 },
+      "note": "xAI's replacement for Grok 4.1 Fast, with reasoning off for speed",
       "params": { "reasoning": { "effort": "none" }, "temperature": 0.3 }
     }
   ]
@@ -78,9 +82,11 @@ also carries the user's settings, the model name and the current keyboard shortc
 - **id**: the model id expected by the provider (OpenRouter ids are `vendor/model`).
 - **provider**: a key of `config.json` → `providers`.
 - **pricing**: USD per 1M tokens, shown in the settings page.
-- **params**: merged into the request body. Use it to turn reasoning off or down
-  (`reasoning.effort` on OpenRouter, `reasoning_effort` on OpenAI) and to set `temperature`.
-- **legacyDefaultModel**: the model selected for users upgrading from v2 who only have an OpenAI key.
+- **params**: merged into the request body. Use it to turn reasoning off or down (`reasoning.effort`)
+  and to set `temperature`. If the model refuses the reasoning setting or streaming, the request is
+  retried once without it.
+- **customModel**: the "Other OpenRouter model…" choice. Any ID matching `pattern` (case-insensitive)
+  is accepted and sent with no extra `params`.
 
 To add a model, append an entry to `models`; the settings page picks it up automatically.
 

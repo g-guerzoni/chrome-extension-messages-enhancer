@@ -5,6 +5,7 @@
       "endpoint": "https://openrouter.ai/api/v1/chat/completions",
       "keyPrefix": "sk-or-",
       "keyUrl": "https://openrouter.ai/keys",
+      "modelsUrl": "https://openrouter.ai/models",
       "maxTokensParam": "max_tokens",
       "headers": {
         "X-Title": "AI Message Enhancer"
@@ -14,15 +15,6 @@
           "sort": "latency"
         }
       }
-    },
-    "openai": {
-      "name": "OpenAI",
-      "endpoint": "https://api.openai.com/v1/chat/completions",
-      "keyPrefix": "sk-",
-      "keyUrl": "https://platform.openai.com/api-keys",
-      "maxTokensParam": "max_completion_tokens",
-      "headers": {},
-      "params": {}
     }
   },
   "limits": {

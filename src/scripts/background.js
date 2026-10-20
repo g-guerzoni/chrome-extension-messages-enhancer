@@ -1,4 +1,4 @@
-import { loadConfig, getActiveModel, getApiKeys, getPrefs, hasDataConsent } from "./shared.js";
+import { loadConfig, getActiveModel, getApiKeys, getPrefs, hasDataConsent, resolveModel } from "./shared.js";
 
 const CONTEXT_MENU_ID = "enhance-selection";
 const CONTENT_SCRIPT = "src/scripts/content.js";
@@ -22,11 +22,10 @@ chrome.runtime.onInstalled.addListener(async ({ reason, previousVersion }) => {
   }
 });
 
-// v3 moved secrets and message text out of sync storage and introduced multiple providers.
+// v3 moved secrets and message text out of sync storage and switched to OpenRouter. The synced v2
+// OpenAI key is left for devices still on v2; settings remove it on the next save.
 async function migrateStorage() {
   const legacy = await chrome.storage.sync.get([
-    "openaiApiKey",
-    "openaiModel",
     "translateEnabled",
     "persistedInputText",
     "persistedOutputText",
@@ -34,20 +33,9 @@ async function migrateStorage() {
     "enableContentScript",
     "inPageTrigger",
   ]);
-  const current = await chrome.storage.local.get(["apiKeys", "model"]);
-  const { models } = await loadConfig();
   const local = {};
 
-  // The synced v2 key stays in place for devices still on v2; settings remove it on the next save.
-  if (legacy.openaiApiKey && !current.apiKeys?.openai) {
-    local.apiKeys = { ...current.apiKeys, openai: legacy.openaiApiKey };
-    // Existing users keep working on their OpenAI key until they pick another model.
-    if (!current.model) {
-      const known = models.models.some((m) => m.id === legacy.openaiModel);
-      local.model = known ? legacy.openaiModel : models.legacyDefaultModel;
-    }
-  }
-  // v3.1 replaced the on/off icon setting with a three-way trigger; respect an explicit "off".
+  // v3 replaced the on/off icon setting with a three-way trigger; respect an explicit "off".
   if (legacy.enableContentScript === false && !legacy.inPageTrigger) {
     await chrome.storage.sync.set({ inPageTrigger: "off" });
   }
@@ -78,6 +66,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         debug("Enhancement failed:", error);
         sendResponse({ error: error.message });
       });
+    return true;
+  }
+
+  // Only extension pages (the settings page), never content scripts, may test an unsaved key.
+  if (request.action === "testConnection" && sender.url?.startsWith(chrome.runtime.getURL(""))) {
+    testConnection(request.data)
+      .then((result) => sendResponse(result))
+      .catch((error) => sendResponse({ error: error.message }));
     return true;
   }
 
@@ -173,38 +169,23 @@ async function enhanceText({ text, ...overrides }, onDelta = () => {}, signal) {
   if (!(await hasDataConsent())) throw new Error("Please review and accept the data notice in the extension settings first.");
   if (!apiKey) throw new Error(`${provider.name} API key not found. Please set it in the extension settings.`);
 
-  const send = (stream) =>
-    fetch(provider.endpoint, {
-      method: "POST",
-      signal,
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-        ...provider.headers,
-      },
-      body: JSON.stringify({
-        model: model.id,
-        messages: [
-          { role: "system", content: buildSystemMessage(instructions, tone, type, translate) },
-          { role: "user", content: text },
-        ],
-        stream,
-        [provider.maxTokensParam]: config.limits.maxCompletionTokens,
-        ...provider.params,
-        ...model.params,
-      }),
-    });
-
   const startedAt = Date.now();
-  let response = await send(true);
-  if (response.status === 400) {
-    // OpenAI only lets verified organizations stream some models; fall back to a single response.
-    const message = await readApiError(response, provider);
-    if (!/stream/i.test(message)) throw new Error(message);
-    debug("Streaming refused, retrying without it:", message);
-    response = await send(false);
-  }
-  if (!response.ok) throw new Error(await readApiError(response, provider));
+  const response = await postCompletion(
+    provider,
+    apiKey,
+    {
+      model: model.id,
+      messages: [
+        { role: "system", content: buildSystemMessage(instructions, tone, type, translate) },
+        { role: "user", content: text },
+      ],
+      stream: true,
+      [provider.maxTokensParam]: config.limits.maxCompletionTokens,
+      ...provider.params,
+      ...model.params,
+    },
+    signal
+  );
 
   const isStream = response.headers.get("content-type")?.includes("text/event-stream");
   const result = isStream ? await readStream(response.body, onDelta) : readCompletion(await response.json(), onDelta);
@@ -216,6 +197,59 @@ async function enhanceText({ text, ...overrides }, onDelta = () => {}, signal) {
   if (finishReason === "length") throw new Error("The response was cut off because it reached the token limit.");
   if (!output) throw new Error("The model returned an empty response. Try again or choose another model.");
   return output;
+}
+
+// Some models refuse part of a request (streaming, or turning reasoning off); retry once without it.
+const REQUEST_FALLBACKS = [
+  { match: /stream/i, apply: (body) => ({ ...body, stream: false }) },
+  { match: /reasoning|effort/i, apply: ({ reasoning, ...body }) => body },
+];
+
+async function postCompletion(provider, apiKey, body, signal) {
+  const send = (payload) =>
+    fetch(provider.endpoint, {
+      method: "POST",
+      signal,
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}`, ...provider.headers },
+      body: JSON.stringify(payload),
+    });
+
+  let payload = body;
+  let response = await send(payload);
+  const used = new Set();
+  while (response.status === 400) {
+    const message = await readApiError(response, provider);
+    const fallback = REQUEST_FALLBACKS.find((f) => !used.has(f) && f.match.test(message));
+    if (!fallback) throw new Error(message);
+    used.add(fallback);
+    debug("Request refused, retrying without the refused option:", message);
+    payload = fallback.apply(payload);
+    response = await send(payload);
+  }
+  if (!response.ok) throw new Error(await readApiError(response, provider));
+  return response;
+}
+
+// Checks the endpoint, the key and the model with a tiny request, using the settings form's values.
+async function testConnection({ modelId, apiKey }) {
+  const { config, models } = await loadConfig();
+  const model = resolveModel(models, modelId);
+  if (!model) throw new Error("Enter an OpenRouter model ID like vendor/model.");
+  const provider = config.providers[model.provider];
+  if (!apiKey) throw new Error(`Enter your ${provider.name} API key first.`);
+
+  const startedAt = Date.now();
+  const response = await postCompletion(provider, apiKey, {
+    model: model.id,
+    messages: [{ role: "user", content: "Reply with the word OK." }],
+    stream: false,
+    [provider.maxTokensParam]: 64,
+    ...provider.params,
+    ...model.params,
+  });
+  const data = await response.json();
+  if (!data.choices?.length) throw new Error(data.error?.message || "The model answered without a result.");
+  return { model: data.model ?? model.id, ms: Date.now() - startedAt };
 }
 
 async function readApiError(response, provider) {
