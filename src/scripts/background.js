@@ -1,4 +1,5 @@
 import { loadConfig, getActiveModel, getApiKeys, getPrefs, hasDataConsent, resolveModel } from "./shared.js";
+import { buildSystemMessage } from "./prompt.js";
 
 const CONTEXT_MENU_ID = "enhance-selection";
 const CONTENT_SCRIPT = "src/scripts/content.js";
@@ -315,19 +316,4 @@ async function* readServerSentEvents(body) {
     }
     if (done) return;
   }
-}
-
-function buildSystemMessage(instructions, tone, type, shouldTranslate) {
-  const bullets = (items) => items.map((item) => `- ${item}`);
-
-  return [
-    shouldTranslate ? instructions.baseTask.withTranslation : instructions.baseTask.default,
-    ...bullets(shouldTranslate ? instructions.translation.enabled : instructions.translation.disabled),
-    ...bullets(instructions.core),
-    ...bullets(instructions.formatting),
-    ...bullets(instructions.avoidance),
-    ...bullets(instructions.tones[tone] ?? instructions.tones.neutral),
-    ...(instructions.messageTypes[type] ?? instructions.messageTypes.message),
-    ...instructions.final,
-  ].join("\n");
 }

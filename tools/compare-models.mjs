@@ -6,6 +6,7 @@
 // (as the extension does) and retried without the setting when a model refuses it.
 
 import { readFile } from "node:fs/promises";
+import { buildSystemMessage } from "../src/scripts/prompt.js";
 
 const CANDIDATES = [
   "x-ai/grok-4.3",
@@ -15,9 +16,11 @@ const CANDIDATES = [
   "google/gemini-2.5-flash-lite",
 ];
 
-// Typical inputs: typos, a Portuguese message to translate, an email, and a mention to keep.
+// Typical inputs: typos, English written with Portuguese structure, a Portuguese message to translate,
+// an email, and a mention to keep.
 const SAMPLES = [
   { tone: "neutral", type: "message", translate: false, text: "hi team quick update, release is on track for thurs. i fixed teh login bug and remaining QA items shoud be done by tomorow afternoon lmk if any questions" },
+  { tone: "neutral", type: "message", translate: false, text: "I need that you send me the report until friday because I have to present it for the director, any doubt I stay at disposal" },
   { tone: "neutral", type: "message", translate: true, text: "oi pessoal, consegui reproduzir o bug do login, parece que é cache do navegador. vou subir o fix hoje a tarde, alguem consegue revisar?" },
   { tone: "formal", type: "email", translate: false, text: "hey, just wanted to check if you got the contract i sent last week. we need it signed by friday otherwise the project start gets pushed. thanks" },
   { tone: "neutral", type: "message", translate: false, text: "@ana can u check the deploy doc its urgent, link is https://example.com/deploy and the channel is #release" },
@@ -34,26 +37,11 @@ const instructions = JSON.parse(await readFile(new URL("instructions.json", root
 const { providers } = JSON.parse(await readFile(new URL("config.json", root), "utf8"));
 const models = process.argv.slice(2).length ? process.argv.slice(2) : CANDIDATES;
 
-// Same order as buildSystemMessage in src/scripts/background.js.
-function systemMessage({ tone, type, translate }) {
-  const bullets = (items) => items.map((item) => `- ${item}`);
-  return [
-    translate ? instructions.baseTask.withTranslation : instructions.baseTask.default,
-    ...bullets(translate ? instructions.translation.enabled : instructions.translation.disabled),
-    ...bullets(instructions.core),
-    ...bullets(instructions.formatting),
-    ...bullets(instructions.avoidance),
-    ...bullets(instructions.tones[tone]),
-    ...instructions.messageTypes[type],
-    ...instructions.final,
-  ].join("\n");
-}
-
 async function complete(model, sample, reasoningOff = true) {
   const body = {
     model,
     messages: [
-      { role: "system", content: systemMessage(sample) },
+      { role: "system", content: buildSystemMessage(instructions, sample.tone, sample.type, sample.translate) },
       { role: "user", content: sample.text },
     ],
     max_tokens: 2000,
@@ -113,4 +101,4 @@ for (const model of models) {
 
 console.log("\n");
 console.table(summary);
-console.log("Read the outputs above to judge quality: typos fixed, meaning kept, @mentions, #channels and links untouched.");
+console.log("Read the outputs above to judge quality: typos fixed, awkward phrasing rewritten, meaning kept, @mentions, #channels and links untouched.");

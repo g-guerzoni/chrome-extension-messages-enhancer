@@ -3,6 +3,7 @@
   "version": "3.0.0",
   "description": "A Chrome extension that enhances text, corrects typos, fixes grammar, and beautifies writing using AI",
   "private": true,
+  "type": "module",
   "author": "Guilherme Guerzoni",
   "repository": {
     "type": "git",

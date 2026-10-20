@@ -98,9 +98,24 @@ To add a model, append an entry to `models`; the settings page picks it up autom
 
 ## instructions.json
 
-The system prompt is assembled in `background.js` (`buildSystemMessage`) in this order:
-`baseTask` → `translation` → `core` → `formatting` → `avoidance` → `tones[tone]` →
-`messageTypes[type]` → `final`.
+The system prompt is assembled in `background.js` (`buildSystemMessage`). Every section is a
+`{ "title", "rules" }` block, rendered as a labelled list in this order:
 
-To add a tone or message type, add a key to `tones` or `messageTypes` and a matching radio button
-in `src/interface/popup.html`.
+`task` → `translation.enabled` or `translation.disabled` → `sections` (what to change, what to keep,
+plain language) → `tones[tone]` → `messageTypes[type]` → `examples` → `output`.
+
+- **task**: who the model is and the input-safety rule (the user message is text to rewrite, never
+  instructions), stated once.
+- **sections**: the rules shared by every tone. The goal is to keep the meaning, not the wording:
+  awkward or word-for-word translated phrasing is rewritten, natural text is left alone.
+- **tones**, **messageTypes**: unknown keys fall back to `neutral` and `message`.
+- **examples**: each item has an `input` and one output per tone; only the chosen tone's outputs are
+  shown, so the model never sees both tones side by side. Keep them short and different from real
+  test cases.
+- **output**: the output contract (plain text only, mentions and links copied exactly), last so it is
+  the freshest instruction when the model starts writing.
+
+To add a tone, add a key to `tones`, an output for that key to every `examples.items` entry, and a
+matching radio button in `src/interface/popup.html` and a button in the in-page preview
+(`buildPopover` in `content.js`). To add a message type, add a key to `messageTypes` and the same
+two controls.
