@@ -14,7 +14,7 @@ A Chrome extension that enhances, corrects, and beautifies your text using fast,
 
 <img width="509" height="604" alt="image" src="https://github.com/user-attachments/assets/e080ca0a-d7ff-4488-af7c-781c6149b0b5" />
 
-### Website Integration (Grammarly-style)
+### Website Integration
 - **Enhancement icon appears directly in text fields** across websites like Teams, Slack, Gmail, and any web page
 - **In-place enhancement**: Click the sparkles ✨ icon and the text in the field is replaced with the enhanced version, with an **Undo** button (Ctrl+Z also works)
 - **Selection support**: Select part of the text to enhance only that part
@@ -99,8 +99,9 @@ A Chrome extension that enhances, corrects, and beautifies your text using fast,
 
 ### API Configuration
 - **Model**: choose from a short list of fast, low-cost models (see below)
+- **Data notice**: shown on install and on upgrade from v2. Nothing is sent to an AI provider until you accept it, and you can withdraw consent at any time in settings
 - **API keys**: an OpenRouter key (`sk-or-...`) for the OpenRouter models, or an OpenAI key for the OpenAI models
-- API keys are stored in Chrome's local storage on this device only (not synced to your Google account)
+- API keys and the selected model are stored in Chrome's local storage on this device only (not synced to your Google account)
 - Your API key is only sent to the provider of the selected model
 
 ### Models
@@ -237,7 +238,3 @@ Guilherme Guerzoni
 ## License
 
 MIT License - See LICENSE file for details
-
-## Keywords
-
-Chrome extension, message enhancer, text improvement, typo correction, spelling checker, grammar checker, text beautifier, text polisher, OpenRouter, Grok, Gemini, GPT, Claude, OpenAI, writing assistant, Grammarly alternative, Slack enhancement, Microsoft Teams, Gmail, email enhancement, tone adjustment, text correction, communication tool, business writing, professional writing, content enhancement, AI writing assistant, text editor, message optimizer, workplace communication, chat enhancement, email formatter, language improvement, writing productivity, typo fixer, message formatting, content optimization, browser extension, productivity tool, writing tool, communication enhancement, text analysis, automated writing, smart writing, intelligent text processing, workplace productivity, business communication, professional messaging, text refinement, message clarity, writing enhancement, communication optimization
