@@ -198,7 +198,18 @@ The extension is built with vanilla JavaScript and follows a clean, modular arch
 
 ## Version History
 
-### v2.4.2 (Current)
+### v3.0.0 (Current)
+- Added OpenRouter support with a short list of fast, low-cost models; Grok 4.1 Fast is the new default
+- Responses stream into the popup as they are generated; reasoning is disabled or minimal for faster answers
+- The ✨ icon now enhances the text in place (or only the selection) with Undo, instead of opening the popup
+- Added a keyboard shortcut (`Alt+Shift+E`) and a right-click menu entry
+- Text replacement goes through the browser's editing pipeline, so rich editors (Slack, Teams, Gmail) keep working and Ctrl+Z undoes it
+- API keys and saved text moved from sync storage to local storage (existing settings are migrated automatically)
+- Clearer API errors, including empty or truncated responses
+- Content script rewritten: no polling, a single shadow-DOM icon, works in iframes, fixed disabled/read-only fields getting an icon
+- Removed unused permissions (`activeTab`) and the web-accessible config files
+
+### v2.4.2
 - Added version display in settings page header
 - Improved content script input validation to exclude more input types (radio, checkbox, file, etc.)
 - Enhanced input type filtering to support search, url, and tel inputs
