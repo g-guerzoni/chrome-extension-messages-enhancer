@@ -17,6 +17,10 @@
   const INPUT_TYPES = ["text", "search", "email", "url"];
   const BLOCK_TAGS = new Set(["P", "DIV", "LI", "UL", "OL", "H1", "H2", "H3", "H4", "H5", "H6", "BLOCKQUOTE", "PRE", "TR", "TABLE", "SECTION", "ARTICLE"]);
   const INTERACTIVE = 'button, a[href], input, select, textarea, [role="button"], [role="link"], [role="menuitem"], [tabindex]:not([tabindex="-1"])';
+  // Focusable widgets that can be editable but are not free text: pickers, toggles, menus, grids.
+  const WIDGET_ROLES = new Set(["combobox", "listbox", "option", "searchbox", "spinbutton", "slider", "checkbox", "radio", "switch", "button", "link", "menu", "menubar", "menuitem", "menuitemcheckbox", "menuitemradio", "tab", "tree", "treeitem", "grid", "gridcell"]);
+  // Not grids: some apps lay out a whole conversation, composer included, as a grid.
+  const WIDGET_CONTAINERS = '[role="search"], [role="combobox"], [role="listbox"], [role="menu"], [role="menubar"], [role="tree"]';
   const ATOMS = '[contenteditable="false"], img, .mention, [data-mention]';
   const RELOAD_MESSAGE = "The extension was updated. Reload this page to keep using it.";
 
@@ -27,6 +31,7 @@
   let pollTimer = null;
   let positionFrame = 0;
   let resizeObserver = null;
+  let fieldObserver = null;
   let ui = null;
   let session = null;
 
@@ -126,12 +131,28 @@
     if (!config || config.inPageTrigger === "off") return false;
     if (config.inPageTrigger === "sites" && !siteProfile()) return false;
     if (isSensitiveSite() || isBlockedByUser()) return false;
-    if (field instanceof HTMLInputElement) return false;
-    if (field.closest('[role="search"], [role="combobox"], [aria-autocomplete]')) return false;
-    if (field.getAttribute("role") === "searchbox" || config.searchPattern.test(describe(field))) return false;
+    if (field instanceof HTMLInputElement || !isMultiline(field) || isWidget(field)) return false;
+    if (field.getAttribute("aria-readonly") === "true" || field.getAttribute("aria-disabled") === "true") return false;
+    if (config.searchPattern.test(describe(field))) return false;
+    // Editors and pickers often keep an off-screen or transparent field focused to capture keys.
+    if (field.checkVisibility?.({ opacityProperty: true, visibilityProperty: true }) === false) return false;
 
     const rect = rectOf(field);
     return rect.width >= config.minField.width && rect.height >= config.minField.height;
+  }
+
+  function isMultiline(field) {
+    return field instanceof HTMLTextAreaElement || field.getAttribute("aria-multiline") !== "false";
+  }
+
+  function isWidget(field) {
+    if (WIDGET_ROLES.has(field.getAttribute("role"))) return true;
+    if (field.parentElement?.closest(WIDGET_CONTAINERS)) return true;
+    // A field that opens suggestions is a picker, unless it is a textarea or declares itself a text
+    // box (composers with @mention suggestions do).
+    const opensPopup = field.hasAttribute("aria-autocomplete") || (field.getAttribute("aria-haspopup") ?? "false") !== "false";
+    const isTextBox = field instanceof HTMLTextAreaElement || field.getAttribute("role") === "textbox" || field.getAttribute("aria-multiline") === "true";
+    return opensPopup && !isTextBox;
   }
 
   // An editable <body> (iframe editors) is only as tall as its text; its frame's viewport is the field.
@@ -620,6 +641,19 @@
     });
   }
 
+  // Model-driven editors (CKEditor 5 in Teams, Lexical) cancel beforeinput and write the DOM
+  // themselves, so typing fires no input event; watch the focused field's DOM instead. Mutation
+  // records are batched per task, so this runs once per keystroke like the input listener.
+  function watchField(field) {
+    if (fieldObserver?.field === field) return;
+    fieldObserver?.disconnect();
+    fieldObserver = null;
+    if (!field || isFormControl(field)) return;
+    fieldObserver = new MutationObserver(() => updatePill());
+    fieldObserver.field = field;
+    fieldObserver.observe(field, { childList: true, characterData: true, subtree: true });
+  }
+
   function startTracking(field) {
     if (resizeObserver?.field === field) return;
     stopTracking();
@@ -741,6 +775,7 @@
     };
 
     activeField = field;
+    watchField(field);
     mountFor(field);
     const { popover, pill } = ui;
     popover.root.hidden = false;
@@ -1032,6 +1067,7 @@
       clearTimeout(hideTimer);
       if (activeField !== field && session) closePopover({ restoreFocus: false });
       activeField = field;
+      watchField(field);
       loadConfig().then(updatePill, () => {});
     },
     true
@@ -1045,6 +1081,7 @@
       hideTimer = setTimeout(() => {
         if (session || isInsideComposer(deepActiveElement())) return;
         activeField = null;
+        watchField(null);
         updatePill();
       }, HIDE_DELAY_MS);
     },

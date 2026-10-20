@@ -45,10 +45,16 @@ also carries the user's settings, the model name and the current keyboard shortc
   `headers` and `params` are added to every request sent to that provider. The settings page renders
   one API key field per provider.
 - **limits.maxCharacters**: maximum input length (popup, in-page enhancement and service worker).
-- **contentScript**: rules for the in-page ✨ Enhance button.
+- **contentScript**: rules for the in-page Enhance button.
   - The button is hidden on hosts that contain a keyword (`mybank.com`) or have a matching label
     (`login.example.com`, `secure-pay.example.com`).
   - `minField`: fields smaller than this get no button (the shortcut and menu still work).
+  - Fixed rules in `content.js` (`pillEligible`) also keep the button off single-line fields
+    (`<input>`, `aria-multiline="false"`), hidden or transparent fields, `aria-readonly` and
+    `aria-disabled` fields, and editable widgets: fields whose role is combobox, listbox, checkbox,
+    menu, grid cell and the like, fields inside a search, combobox, listbox, menu or tree, and fields
+    that open suggestions (`aria-autocomplete`, `aria-haspopup`) without being a textarea or a
+    `role="textbox"` / `aria-multiline="true"` text box.
   - `searchPattern` and `sensitivePattern`: case-insensitive regular expressions matched against a
     field's name, id, autocomplete, aria-label and placeholder. Search-like fields get no button;
     sensitive ones are never enhanced.
