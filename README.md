@@ -12,7 +12,7 @@ A Chrome extension that enhances, corrects, and beautifies your text using fast,
 - Bring your own key: OpenRouter (default, Grok 4.1 Fast) or OpenAI
 - Responses stream in as they are generated
 
-<img width="509" height="604" alt="image" src="https://github.com/user-attachments/assets/e080ca0a-d7ff-4488-af7c-781c6149b0b5" />
+<img src="docs/screenshots/popup.png" width="500" alt="Popup with the original text, tone, message type and translation options, the enhanced text and where the text is sent" />
 
 ### Website Integration
 - **✨ Enhance button** on message boxes across websites like Teams, Slack, Gmail and Outlook. It sits on the field's border and moves out of the way of the site's own buttons
@@ -24,11 +24,11 @@ A Chrome extension that enhances, corrects, and beautifies your text using fast,
 - **Keyboard shortcut**: `Alt+Shift+E` opens the preview for the focused field (change it in settings)
 - **Right-click menu**: "Enhance with AI Message Enhancer…" on any editable field
 
-<img width="929" height="70" alt="Screenshot 2025-08-04 at 13 20 40" src="https://github.com/user-attachments/assets/f59e7823-a668-4b57-94db-13ea93d0b15d" />
+<img src="docs/screenshots/in-place.png" width="1040" alt="A chat message box with the Enhance button above it and the preview showing the changes, with Replace, Copy and Retry" />
 
 ### Settings
 
-<img width="553" height="742" alt="image" src="https://github.com/user-attachments/assets/33a46d48-d109-4b44-a58b-2e60f06a9a7a" />
+<img src="docs/screenshots/settings.png" width="640" alt="Settings page with the data notice, model, API keys, theme, where to show the Enhance button, keyboard shortcut and blocked domains" />
 
 ### Language & Translation
 - **Automatic language detection** for any input text
