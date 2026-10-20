@@ -193,17 +193,15 @@ The extension is built with vanilla JavaScript and follows a clean, modular arch
 ## Version History
 
 ### v3.0.0 (Current)
-- Switched to OpenRouter: Grok 4.3 by default, any other OpenRouter model by ID, and a Test connection button in settings
-- Responses stream into the popup as they are generated; reasoning is disabled or minimal for faster answers
-- New in-page flow: a ✨ Enhance button that avoids the site's own buttons and opens a streaming preview with tone, type and translation per site, a word diff, Replace, Copy, Retry and Undo. Nothing changes in the page until you press Replace
-- Added a keyboard shortcut (`Alt+Shift+E`) and a right-click menu entry, and a settings choice for where the button shows
-- Text goes in through each editor's own paste handling and is verified, so Slack (Quill), Teams (CKEditor 5) and Lexical-based editors work and Ctrl+Z undoes it; Gmail and Outlook signatures and quoted threads are left alone
-- A data notice must be accepted before any text is sent, as the Chrome Web Store requires
-- API keys and saved text moved from sync storage to local storage (existing settings are migrated automatically)
-- Clearer API errors, including empty or truncated responses
-- Content script rewritten: no polling, works in iframes and modal dialogs, skips search, sensitive, disabled and read-only fields
-- Popup fits in one screen, guides first-run key setup and keeps errors readable; settings mark which key the model needs
-- New toolbar icon, local SVG icons instead of Google Fonts, and the icon PNGs are committed so fresh clones load
+
+- **OpenRouter**: Grok 4.3 by default, or any OpenRouter model by ID. Settings test the connection, key and model in one click.
+- **In-Page Preview**: The ✨ Enhance button opens a streaming preview with tone, type and translation per site. Nothing in the page changes until you press Replace, and Undo puts it back.
+- **Rich Editors**: Works in Slack, Teams and Gmail. Mail signatures and quoted threads are never sent or rewritten.
+- **Shortcut and Menu**: `Alt+Shift+E` and the right-click menu open the same preview.
+- **Data Notice**: Nothing is sent until you accept the data notice.
+- **Privacy**: API keys and saved text stay on this device instead of syncing.
+- **Popup and Settings**: The popup fits in one screen, settings are grouped into sections, and errors stay readable.
+- **New Icon**: Redesigned toolbar icon, and local icons instead of Google Fonts.
 
 ### v2.4.2
 - Added version display in settings page header
