@@ -134,13 +134,24 @@
       justify-content: center;
       cursor: pointer;
       z-index: 999999;
-      font-size: 12px;
-      font-family: Arial, sans-serif;
       box-shadow: 0 2px 4px rgba(0,0,0,0.2);
       transition: all 0.2s ease;
       pointer-events: auto !important;
     `;
-    icon.innerHTML = '✨';
+    // Inline SVG instead of the ✨ emoji, whose size varies by OS emoji font
+    // and can touch the edge of the circle
+    const svgNS = 'http://www.w3.org/2000/svg';
+    const sparkle = document.createElementNS(svgNS, 'svg');
+    sparkle.setAttribute('width', '14');
+    sparkle.setAttribute('height', '14');
+    sparkle.setAttribute('viewBox', '0 0 24 24');
+    sparkle.setAttribute('fill', 'currentColor');
+    sparkle.setAttribute('aria-hidden', 'true');
+    sparkle.style.pointerEvents = 'none';
+    const sparklePath = document.createElementNS(svgNS, 'path');
+    sparklePath.setAttribute('d', 'M12 1C12.8 7.6 16.4 11.2 23 12C16.4 12.8 12.8 16.4 12 23C11.2 16.4 7.6 12.8 1 12C7.6 11.2 11.2 7.6 12 1Z');
+    sparkle.appendChild(sparklePath);
+    icon.appendChild(sparkle);
     icon.title = 'Enhance this text with Message Enhancer';
     icon.className = 'message-enhancer-icon';
 
