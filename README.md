@@ -62,18 +62,12 @@ A Chrome extension that enhances, corrects, and beautifies your text using fast,
    cd chrome-extension-messages-enhancer
    ```
 
-2. Install dependencies and generate icons:
-   ```bash
-   npm install
-   npm run generate-icons
-   ```
-
-3. Load the extension in Chrome:
+2. Load the extension in Chrome (there is no build step):
    - Open Chrome and navigate to `chrome://extensions/`
    - Enable "Developer mode" in the top right corner
    - Click "Load unpacked" and select the extension directory
 
-4. Configure the extension:
+3. Configure the extension:
    - Click the extension icon in Chrome's toolbar
    - Click the "Settings" button (gear icon)
    - Pick a model and enter the matching API key (OpenRouter or OpenAI)
@@ -170,8 +164,8 @@ The extension is built with vanilla JavaScript and follows a clean, modular arch
 │       ├── common.css         # Shared styles and theme variables
 │       ├── popup.css          # Main interface styles
 │       └── options.css        # Settings page styles
-├── icons/                     # Extension icons (generated from SVG)
-└── generate-icons.js          # Icon generation utility
+├── icons/                     # icon16/32/48/128.png; icon.svg and icon16.svg are their sources
+└── docs/screenshots/          # README images (not packaged)
 ```
 
 ### Key Technical Features
@@ -194,7 +188,6 @@ The extension is built with vanilla JavaScript and follows a clean, modular arch
 
 - Google Chrome browser (version 88+)
 - An OpenRouter API key (or an OpenAI API key)
-- Node.js and npm (for development only)
 
 ## Version History
 
