@@ -75,9 +75,9 @@
         <div id="error-message" class="error-message" role="alert"></div>
 
         <div id="setup-notice" class="notice" hidden>
-          Add your <span id="setup-provider"></span> API key to start.
-          <button type="button" id="setup-settings" class="link-button">Open settings</button> ·
-          <a id="setup-key-link" target="_blank" rel="noopener">Get a key</a>
+          <span id="setup-message"></span>
+          <button type="button" id="setup-settings" class="link-button">Open settings</button>
+          <span id="setup-key"> · <a id="setup-key-link" target="_blank" rel="noopener">Get a key</a></span>
         </div>
 
         <button id="enhance-btn" class="primary-button">
@@ -95,7 +95,7 @@
           <textarea id="output-text" readonly></textarea>
         </div>
 
-        <p class="hint">Model: <span id="model-name"></span><span id="shortcut-hint"></span></p>
+        <p class="hint">Text is sent to <span id="model-name"></span><span id="shortcut-hint"></span></p>
 
         <div id="status-announcer" role="status" aria-live="polite" aria-atomic="true" class="sr-only"></div>
       </main>

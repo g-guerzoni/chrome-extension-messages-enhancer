@@ -1,4 +1,4 @@
-import { loadConfig, getActiveModel, getApiKeys, getPrefs, initTheme, setIcon } from "./shared.js";
+import { loadConfig, getActiveModel, getApiKeys, getPrefs, initTheme, setIcon, hasDataConsent } from "./shared.js";
 
 const inputText = document.getElementById("input-text");
 const outputText = document.getElementById("output-text");
@@ -15,7 +15,8 @@ const statusAnnouncer = document.getElementById("status-announcer");
 const modelName = document.getElementById("model-name");
 const shortcutHint = document.getElementById("shortcut-hint");
 const setupNotice = document.getElementById("setup-notice");
-const setupProvider = document.getElementById("setup-provider");
+const setupMessage = document.getElementById("setup-message");
+const setupKey = document.getElementById("setup-key");
 const setupKeyLink = document.getElementById("setup-key-link");
 const buttonText = enhanceBtn.querySelector(".button-text");
 
@@ -104,6 +105,7 @@ function enhanceText() {
   setLoading(true);
   copyBtn.disabled = true;
   let receivedDelta = false;
+  let finished = false;
 
   const port = chrome.runtime.connect({ name: "enhance" });
   port.onMessage.addListener((message) => {
@@ -126,10 +128,14 @@ function enhanceText() {
       announce("Text enhancement complete");
       saveText();
     }
+    finished = true;
     setLoading(false);
     port.disconnect();
   });
-  port.onDisconnect.addListener(() => setLoading(false));
+  port.onDisconnect.addListener(() => {
+    if (!finished) showError("Lost the connection to the extension. Please try again.");
+    setLoading(false);
+  });
   port.postMessage({ text, ...readPrefs() });
 }
 
@@ -166,6 +172,7 @@ function setLoading(isLoading) {
   cleanBtn.disabled = isLoading;
   optionInputs.forEach((input) => (input.disabled = isLoading));
   if (isLoading) announce("Processing your text, please wait");
+  else refreshModelStatus();
 }
 
 function saveText() {
@@ -185,14 +192,21 @@ async function loadText() {
 }
 
 async function refreshModelStatus() {
-  const [model, apiKeys, { config }] = await Promise.all([getActiveModel(), getApiKeys(), loadConfig()]);
+  const [model, apiKeys, { config }, consent] = await Promise.all([
+    getActiveModel(),
+    getApiKeys(),
+    loadConfig(),
+    hasDataConsent(),
+  ]);
   const hasApiKey = Boolean(apiKeys[model.provider]);
   const provider = config.providers[model.provider];
 
-  modelName.textContent = `${model.name} (${provider.name})`;
-  enhanceBtn.disabled = !hasApiKey;
-  setupNotice.hidden = hasApiKey;
-  setupProvider.textContent = provider.name;
+  modelName.textContent = `${provider.name} (${model.name})`;
+  enhanceBtn.disabled = !hasApiKey || !consent;
+  setupNotice.hidden = hasApiKey && consent;
+  // Consent comes first; the key link only helps once that is done.
+  setupMessage.textContent = consent ? `Add your ${provider.name} API key to start.` : "Review how your text is handled to start.";
+  setupKey.hidden = !consent;
   setupKeyLink.href = provider.keyUrl;
 }
 
@@ -217,7 +231,7 @@ async function init() {
   if (keepTextOnClose) await loadText();
 
   chrome.storage.onChanged.addListener((changes) => {
-    if (changes.apiKeys || changes.model) refreshModelStatus();
+    if (changes.apiKeys || changes.model || changes.dataConsent) refreshModelStatus();
     if (changes.keepTextOnClose) keepTextOnClose = changes.keepTextOnClose.newValue !== false;
   });
 

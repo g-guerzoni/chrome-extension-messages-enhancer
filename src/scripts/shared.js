@@ -8,20 +8,33 @@ function fetchJson(name) {
 }
 
 export function loadConfig() {
-  configPromise ??= Promise.all([fetchJson("config"), fetchJson("model"), fetchJson("instructions")]).then(
-    ([config, models, instructions]) => ({ config, models, instructions })
-  );
+  configPromise ??= Promise.all([fetchJson("config"), fetchJson("model"), fetchJson("instructions")])
+    .then(([config, models, instructions]) => ({ config, models, instructions }))
+    .catch((error) => {
+      // Don't cache a failed load for the rest of the worker's life.
+      configPromise = null;
+      throw error;
+    });
   return configPromise;
 }
 
+// The model lives in local storage next to the API keys, so a synced choice can never point
+// at a provider whose key only exists on another device.
 export async function getActiveModel() {
-  const [{ models }, { model }] = await Promise.all([loadConfig(), chrome.storage.sync.get("model")]);
+  const [{ models }, { model }] = await Promise.all([loadConfig(), chrome.storage.local.get("model")]);
   return models.models.find((m) => m.id === model) ?? models.models.find((m) => m.id === models.defaultModel);
 }
 
 export async function getApiKeys() {
   const { apiKeys } = await chrome.storage.local.get("apiKeys");
   return apiKeys ?? {};
+}
+
+export const DATA_CONSENT_VERSION = 1;
+
+export async function hasDataConsent() {
+  const { dataConsent } = await chrome.storage.local.get("dataConsent");
+  return dataConsent?.version === DATA_CONSENT_VERSION;
 }
 
 export async function getPrefs() {

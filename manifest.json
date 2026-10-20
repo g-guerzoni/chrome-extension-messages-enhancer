@@ -1,9 +1,9 @@
 {
   "manifest_version": 3,
   "name": "AI Message Enhancer",
-  "description": "Enhance, correct typos, fix grammar, and beautify your text for Slack, Teams, email, and any website using AI",
+  "description": "Fix typos, grammar and tone in any text field with AI. Uses your own OpenRouter or OpenAI API key.",
   "version": "3.0.0",
-  "permissions": ["storage", "contextMenus"],
+  "permissions": ["storage", "contextMenus", "scripting", "activeTab"],
   "action": {
     "default_popup": "src/interface/popup.html",
     "default_icon": {
@@ -34,9 +34,11 @@
   },
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
+      "matches": ["http://*/*", "https://*/*"],
       "js": ["src/scripts/content.js"],
       "all_frames": true,
+      "match_about_blank": true,
+      "match_origin_as_fallback": true,
       "run_at": "document_idle"
     }
   ]
