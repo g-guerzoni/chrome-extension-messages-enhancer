@@ -5,7 +5,7 @@
   if (globalThis.__aiMessageEnhancerLoaded) return;
   globalThis.__aiMessageEnhancerLoaded = true;
 
-  const PILL_HEIGHT = 22;
+  const PILL_HEIGHT = 24;
   const COMPACT_FIELD_WIDTH = 260;
   const MIN_TEXT_CHARS = 3;
   const HIDE_DELAY_MS = 300;
@@ -23,6 +23,21 @@
   const WIDGET_CONTAINERS = '[role="search"], [role="combobox"], [role="listbox"], [role="menu"], [role="menubar"], [role="tree"]';
   const ATOMS = '[contenteditable="false"], img, .mention, [data-mention]';
   const RELOAD_MESSAGE = "The extension was updated. Reload this page to keep using it.";
+  const SVG_NS = "http://www.w3.org/2000/svg";
+  // The toolbar icon (icons/icon16.svg) and the popup's check (src/interface/icons.svg), inlined
+  // because pages cannot load the extension's files.
+  const ICONS = {
+    brand: {
+      viewBox: "0 0 16 16",
+      paths: [
+        ["#4f46e5", "M1 7.6a7.4 7.4 0 1 0 14.8 0a7.4 7.4 0 1 0 -14.8 0Z"],
+        ["#4f46e5", "M2.4 11.2L0.6 15.6L5.8 14.4Z"],
+        ["#fff", "M8.3 2.6Q9.652 6.448 13.5 7.8Q9.652 9.152 8.3 13Q6.948 9.152 3.1 7.8Q6.948 6.448 8.3 2.6Z"],
+        ["#fff", "M12.6 1.5Q13.23 2.97 14.7 3.6Q13.23 4.23 12.6 5.7Q11.97 4.23 10.5 3.6Q11.97 2.97 12.6 1.5Z"],
+      ],
+    },
+    check: { viewBox: "0 0 24 24", paths: [["currentColor", "M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"]] },
+  };
 
   let configPromise = null;
   let config = null;
@@ -421,14 +436,14 @@
     button { font: inherit; color: inherit; cursor: pointer; }
     button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
     .pill, .chip {
-      position: fixed; height: ${PILL_HEIGHT}px; display: flex; align-items: center; gap: 4px;
-      padding: 0 8px 0 6px; border: 1px solid #c7d2fe; border-radius: 11px; background: var(--bg);
+      position: fixed; height: ${PILL_HEIGHT}px; display: flex; align-items: center; gap: 5px;
+      padding: 0 9px 0 4px; border: 1px solid var(--accent); border-radius: ${PILL_HEIGHT / 2}px; background: var(--bg);
       color: var(--accent-text); font-size: 12px; font-weight: 600; line-height: 1; white-space: nowrap;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 2px 6px rgba(79, 70, 229, 0.3);
     }
-    .pill { opacity: 0.85; }
-    .pill:hover, .pill[aria-expanded="true"] { opacity: 1; background: var(--accent-soft); }
-    .pill.compact { padding: 0 5px; }
+    .pill:hover, .pill[aria-expanded="true"] { background: var(--accent-soft); }
+    .pill.compact { padding: 0 3px; }
+    .icon { width: 16px; height: 16px; flex: none; }
     .pill.compact .label { display: none; }
     .chip button { border: 0; background: none; padding: 0 2px; color: var(--accent-text); font-weight: 700; text-decoration: underline; }
     .notice { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); padding: 8px 12px; border-radius: 8px;
@@ -438,7 +453,7 @@
       border-radius: 12px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18); overflow: hidden;
     }
     .bar { display: flex; align-items: center; gap: 6px; padding: 8px 10px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
-    .title { font-weight: 600; margin-right: auto; }
+    .title { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; margin-right: auto; }
     .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
     .seg button, .toggle { border: 0; background: var(--bg); padding: 3px 8px; font-size: 12px; color: var(--text); }
     .toggle { border: 1px solid var(--border); border-radius: 8px; }
@@ -471,6 +486,21 @@
     return node;
   }
 
+  function icon(name) {
+    const { viewBox, paths } = ICONS[name];
+    const svg = document.createElementNS(SVG_NS, "svg");
+    svg.setAttribute("class", "icon");
+    svg.setAttribute("viewBox", viewBox);
+    svg.setAttribute("aria-hidden", "true");
+    for (const [fill, d] of paths) {
+      const path = document.createElementNS(SVG_NS, "path");
+      path.setAttribute("fill", fill);
+      path.setAttribute("d", d);
+      svg.append(path);
+    }
+    return svg;
+  }
+
   function ensureUi() {
     if (ui) return ui;
 
@@ -479,7 +509,7 @@
     const root = host.attachShadow({ mode: "closed" });
     const surface = el("div", { className: "surface" });
 
-    const pill = el("button", { type: "button", className: "pill", hidden: true, "aria-expanded": "false" }, "✨", el("span", { className: "label" }, "Enhance"));
+    const pill = el("button", { type: "button", className: "pill", hidden: true, "aria-expanded": "false" }, icon("brand"), el("span", { className: "label" }, "Enhance"));
     pill.addEventListener("click", () => activeField && togglePopover(activeField, { viaKeyboard: false }));
 
     const chip = el("div", { className: "chip", hidden: true, role: "status" });
@@ -682,7 +712,7 @@
       for (const [value, text] of options) group.append(el("button", { type: "button", value, "aria-pressed": "false" }, text));
       return group;
     };
-    const title = el("span", { className: "title", id: "me-title" }, "✨ Enhanced");
+    const title = el("span", { className: "title", id: "me-title" }, icon("brand"), "Enhanced");
     const tone = segment("Tone", [["neutral", "Neutral"], ["formal", "Formal"]]);
     const type = segment("Message type", [["message", "Message"], ["email", "Email"]]);
     const translate = el("button", { type: "button", className: "toggle", "aria-pressed": "false", title: "Translate to English" }, "→ EN");
@@ -997,7 +1027,7 @@
   function showUndoChip(field, snapshot, inserted) {
     const { chip, pill } = ui;
     const undo = el("button", { type: "button" }, "Undo");
-    chip.replaceChildren("✓ Replaced · ", undo);
+    chip.replaceChildren(icon("check"), "Replaced · ", undo);
     undo.addEventListener("click", async () => {
       chip.hidden = true;
       if (!(await undoReplace(field, snapshot, inserted))) showNotice("Couldn't undo automatically. Press Ctrl+Z in the field.");

@@ -1,11 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
   <!-- AI Message Enhancer: master icon. Artwork stays inside the 96x96 box (16..112); 16px transparent padding per CWS guidance. -->
-  <!-- Indigo message bubble (same #4f46e5 as the in-page button) -->
+  <!-- Indigo message bubble (same #4f46e5 as the in-page button's accent) -->
   <g fill="#4f46e5">
     <circle cx="64" cy="62" r="46"/>
     <path d="M31 93L20 112L49 103Z"/>
   </g>
-  <!-- Sparkles (matches the in-page ✨ button) -->
+  <!-- Sparkles (the in-page Enhance button shows icon16.svg) -->
   <g fill="#fff">
     <path d="M62 34Q66.48 57.52 90 62Q66.48 66.48 62 90Q57.52 66.48 34 62Q57.52 57.52 62 34Z"/>
     <path d="M87 26Q89.2 34.8 98 37Q89.2 39.2 87 48Q84.8 39.2 76 37Q84.8 34.8 87 26Z"/>
