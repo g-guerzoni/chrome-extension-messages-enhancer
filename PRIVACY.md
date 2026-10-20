@@ -8,7 +8,7 @@ AI Message Enhancer is a Chrome extension that improves the grammar, clarity and
 ## Data the Extension Handles
 
 ### Text you choose to enhance
-- When you press Enhance in the popup, click the ✨ button next to a text field, press the keyboard shortcut or use the right-click menu, the text of that field (or your selection) is sent to the provider of the model you chose, together with your API key.
+- When you press Enhance in the popup, click ✨ Enhance next to a text field, press the keyboard shortcut or use the right-click menu, the text of that field (or your selection) is sent to the provider of the model you chose, together with your API key.
 - Nothing is sent before one of those actions, and nothing is sent until you accept the data notice shown on install (you can withdraw consent at any time in settings).
 - If "Keep text when extension closes" is on, the popup's input and output text are stored on your device only.
 
