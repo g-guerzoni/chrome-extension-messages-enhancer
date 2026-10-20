@@ -8,7 +8,7 @@ AI Message Enhancer is a Chrome extension that improves the grammar, clarity and
 ## Data the Extension Handles
 
 ### Text you choose to enhance
-- When you press Enhance in the popup, click ✨ Enhance next to a text field, press the keyboard shortcut or use the right-click menu, the text of that field (or your selection) is sent to the provider of the model you chose, together with your API key.
+- When you press Enhance in the popup, click the Enhance button next to a text field, press the keyboard shortcut or use the right-click menu, the text of that field (or your selection) is sent to the provider of the model you chose, together with your API key.
 - Nothing is sent before one of those actions, and nothing is sent until you accept the data notice shown on install.
 - If "Keep text when extension closes" is on, the popup's input and output text are stored on your device only.
 
@@ -39,10 +39,10 @@ Requests use your own API key, so they are subject to your agreement with that p
 - **storage**: save your settings, API keys and the popup's text.
 - **contextMenus**: add "Enhance with AI Message Enhancer" to the right-click menu of text fields.
 - **scripting** and **activeTab**: when you use the keyboard shortcut or the right-click menu on a tab that was open before the extension was installed or updated, load the extension's script into that tab so the request can be handled.
-- **Content script on all websites** (all frames): show the ✨ button next to the text field you are typing in and replace the text in place when you ask. The script only looks at the focused field on your device to decide whether to show the button; it sends nothing unless you take one of the actions listed above.
+- **Content script on all websites** (all frames): show the Enhance button next to the text field you are typing in and replace the text in place when you ask. The script only looks at the focused field on your device to decide whether to show the button; it sends nothing unless you take one of the actions listed above.
 
 ## Your Control
-- Turn off the ✨ button entirely, or hide it on specific sites, in settings.
+- Turn off the Enhance button entirely, or hide it on specific sites, in settings.
 - Remove all stored data by uninstalling the extension.
 
 ## Children's Privacy

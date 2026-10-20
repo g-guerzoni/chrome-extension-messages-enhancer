@@ -9,13 +9,15 @@ A Chrome extension that enhances, corrects, and beautifies your text using fast,
 - **Correct grammar and punctuation** mistakes
 - **Improve clarity and readability** of your writing
 - **Beautify and polish** text while preserving your original meaning
+- **Rewrite, not just proofread**: awkward or word-for-word translated phrasing (for example, Portuguese sentence structure in English) becomes what a fluent writer would say. The meaning is kept, not the wording
+- **Plain international English**: idioms, slang and regional expressions are replaced with plain words that non-native readers understand
 - Bring your own OpenRouter key; Grok 4.3 by default, or type any OpenRouter model ID
 - Responses stream in as they are generated
 
 <img src="docs/screenshots/popup.png" width="500" alt="Popup with the original text, tone, message type and translation options, the enhanced text and where the text is sent" />
 
 ### Website Integration
-- **✨ Enhance button** on message boxes across websites like Teams, Slack, Gmail and Outlook. It sits on the field's border and moves out of the way of the site's own buttons
+- **Enhance button** with the extension's icon on message boxes across websites like Teams, Slack, Gmail and Outlook. It appears as you type, sits on the field's border and moves out of the way of the site's own buttons
 - **Review before replacing**: the enhanced text streams into a small preview next to the field. Nothing in the page changes until you press **Replace** (or Ctrl+Enter); **Show changes** highlights what was edited
 - **Tone, type and translation per site**: Neutral or Formal, Message or Email (Gmail and Outlook start as Email), and translate to English, remembered for each site
 - **Selection support**: select part of the text to rewrite only that part and keep @mentions and formatting elsewhere
@@ -38,12 +40,12 @@ A Chrome extension that enhances, corrects, and beautifies your text using fast,
 
 ### Message Customization
 - Multiple tone options:
-  - **Neutral**: Balanced and professional tone (default)
-  - **Formal**: Business-appropriate language with complete sentences
+  - **Neutral**: relaxed and natural, like a clear message to a colleague (default)
+  - **Formal**: polished and professional, with no contractions, but without stiff phrases such as "I hope this message finds you well" or "Kindly"
 - Message type adaptation:
-  - **Message**: Optimized for chat messages, social media, and informal communication
-  - **Email**: Adds proper email formatting and professional etiquette
-- Intelligent tone adjustment when switching between message types
+  - **Message**: chat messages and short notes, kept as compact as you wrote them
+  - **Email**: puts the greeting, paragraphs and sign-off on their own lines; it never adds a greeting, sign-off, subject or signature
+- Greetings, sign-offs, names, job titles, numbers, dates, @mentions, links and emoji codes are kept as written
 
 ### User Interface & Experience
 - Clean, modern interface with intuitive controls
@@ -92,7 +94,7 @@ A Chrome extension that enhances, corrects, and beautifies your text using fast,
 
 ### Website Integration Method
 1. Type your message in a message box (Teams, Slack, Gmail, Outlook or any site)
-2. Click **✨ Enhance** on the field's border, press `Alt+Shift+E`, or right-click and choose "Enhance with AI Message Enhancer…"
+2. Click **Enhance** on the field's border, press `Alt+Shift+E`, or right-click and choose "Enhance with AI Message Enhancer…"
 3. Review the enhanced text in the preview; change the tone, type or translation if you like
 4. Press **Replace** (or Ctrl+Enter) to put it in the field, or Esc to close without changes
 5. Changed your mind? Click **Undo** next to the button or press Ctrl+Z
@@ -119,14 +121,15 @@ If a model refuses to turn reasoning off or to stream, the request is retried wi
 ### User Preferences
 - **Theme Selection**: Choose between System, Light, or Dark mode
 - **Keep Text on Close**: Automatically save and restore your text between sessions
-- **Website Integration**: show the ✨ Enhance button on multi-line fields, only on Slack, Teams, Gmail and Outlook, or never
+- **Website Integration**: show the Enhance button on multi-line fields, only on Slack, Teams, Gmail and Outlook, or never
 - **Keyboard shortcut**: see the current shortcut and change it
-- **Domain Blocking**: hide the ✨ Enhance button on specific domains or pages (e.g., `github.com`, `twitter.com/compose`)
+- **Domain Blocking**: hide the Enhance button on specific domains or pages (e.g., `github.com`, `twitter.com/compose`)
 
 ### Website Integration
-- **Where the button shows**: multi-line text fields and rich editors that are big enough; never on search boxes, single-line inputs or tiny fields. The shortcut and the right-click menu work on any text field
+- **Where the button shows**: multi-line text fields and rich editors that are big enough and visible; never on search boxes, single-line inputs, tiny or hidden fields, or on pickers and widgets that happen to be editable (comboboxes, tag pickers, menus, checkboxes, grid cells, read-only fields). The shortcut and the right-click menu work on any text field
+- **Shows while you type**: the button appears once the field has a few characters, also in editors that write the page themselves instead of firing input events (Teams)
 - **Rich editors**: text goes in through the editor's own paste handling (Slack, Teams, Lexical-based apps), and the result is checked afterwards. If a site refuses it, the text is copied to the clipboard instead and nothing in the field changes
-- **Performance optimized**: no page polling; the script reacts when a text field gets focus and only tracks the field while the button is visible
+- **Performance optimized**: no page polling; the script reacts when a text field gets focus and only watches that field while it has focus
 - Password, one-time-code, card and similar fields are ignored, as are sites whose host looks like banking or login pages
 
 ## Platform Support
@@ -160,12 +163,14 @@ The extension is built with vanilla JavaScript and follows a clean, modular arch
 │   │   ├── options.js         # Settings management
 │   │   ├── background.js      # Service worker: streaming API calls, shortcut, context menu
 │   │   ├── content.js         # Website integration script (in-place enhancement)
+│   │   ├── prompt.js          # Builds the system prompt from instructions.json
 │   │   └── shared.js          # Config/settings helpers shared by the extension pages
 │   └── styles/
 │       ├── common.css         # Shared styles and theme variables
 │       ├── popup.css          # Main interface styles
 │       └── options.css        # Settings page styles
 ├── icons/                     # icon16/32/48/128.png; icon.svg and icon16.svg are their sources
+├── tools/compare-models.mjs   # Compares OpenRouter models on the real prompt (not packaged)
 └── docs/screenshots/          # README images (not packaged)
 ```
 
@@ -191,6 +196,14 @@ The extension is built with vanilla JavaScript and follows a clean, modular arch
 - An OpenRouter API key
 
 ## Version History
+
+### Unreleased
+
+- **Better Rewrites**: The prompt was rewritten. It fixes awkward and word-for-word translated phrasing instead of only typos, uses plain international English, and the formal tone is professional without being ceremonious.
+- **Enhance Button**: It uses the extension's icon, stands out a little more, and appears while you type in Teams instead of only after the field is focused again.
+- **Fewer False Positives**: The button no longer shows on comboboxes, tag pickers, checkboxes, menus, grid cells, single-line, read-only or hidden editable fields, and is no longer skipped on message boxes that offer @mention suggestions.
+- **Preview**: It moves up when its status line or a warning appears, so it no longer covers the Enhance button.
+- **Popup**: More space between the character count and the options.
 
 ### v3.0.0 (Current)
 
