@@ -5,6 +5,13 @@ set OUTPUT_ZIP=chrome.zip
 
 cd /d "%~dp0"
 
+for %%S in (16 48 128) do (
+  if not exist "icons\icon%%S.png" (
+    echo Error: icons\icon%%S.png is missing. Run 'npm install ^&^& npm run generate-icons' first.
+    exit /b 1
+  )
+)
+
 if exist "%OUTPUT_ZIP%" (
   echo Removing existing archive...
   del "%OUTPUT_ZIP%"

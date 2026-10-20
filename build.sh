@@ -4,6 +4,13 @@ OUTPUT_ZIP="chrome.zip"
 
 cd "$(dirname "$0")"
 
+for size in 16 48 128; do
+  if [ ! -f "icons/icon${size}.png" ]; then
+    echo "Error: icons/icon${size}.png is missing. Run 'npm install && npm run generate-icons' first."
+    exit 1
+  fi
+done
+
 rm -f "./${OUTPUT_ZIP}"
 
 echo "Creating archive '${OUTPUT_ZIP}'..."

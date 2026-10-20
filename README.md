@@ -58,11 +58,12 @@ A Chrome extension that enhances, corrects, and beautifies your text using OpenA
    cd chrome-extension-messages-enhancer
    ```
 
-2. Install dependencies and generate icons:
+2. Install dependencies and generate icons (requires Node.js 20.9+):
    ```bash
    npm install
    npm run generate-icons
    ```
+   This renders `icons/icon.svg` into the `icon16.png`, `icon48.png` and `icon128.png` files referenced by `manifest.json`. The PNGs are not committed, so Chrome will fail with "Could not load icon" until this step has run.
 
 3. Load the extension in Chrome:
    - Open Chrome and navigate to `chrome://extensions/`
@@ -153,8 +154,10 @@ The extension is built with vanilla JavaScript and follows a clean, modular arch
 │       ├── popup.css          # Main interface styles
 │       ├── options.css        # Settings page styles
 │       └── content.css        # Website integration styles
-├── icons/                     # Extension icons (generated from SVG)
-└── generate-icons.js          # Icon generation utility
+├── icons/
+│   └── icon.svg               # Icon source; PNGs are generated from it (git-ignored)
+├── generate-icons.js          # Renders icon.svg to 16/48/128 PNGs (npm run generate-icons)
+└── build.sh / build.bat       # Package manifest, icons and src into chrome.zip
 ```
 
 ### Key Technical Features
@@ -177,7 +180,7 @@ The extension is built with vanilla JavaScript and follows a clean, modular arch
 
 - Google Chrome browser (version 88+)
 - OpenAI API key with access to GPT-4.1 Nano model
-- Node.js and npm (for development only)
+- Node.js 20.9+ and npm (to generate the icons when loading from source)
 
 ## Version History
 
