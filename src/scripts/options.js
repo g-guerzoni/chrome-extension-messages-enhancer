@@ -1,5 +1,8 @@
-const apiKeyInput = document.getElementById("api-key");
+import { loadConfig, getApiKeys, formatPrice, applyTheme } from "./shared.js";
+
 const modelSelect = document.getElementById("model");
+const modelHelp = document.getElementById("model-help");
+const apiKeysContainer = document.getElementById("api-keys");
 const themeSelect = document.getElementById("theme");
 const keepTextCheckbox = document.getElementById("keep-text");
 const contentScriptCheckbox = document.getElementById("content-script");
@@ -7,138 +10,164 @@ const debugModeCheckbox = document.getElementById("debug-mode");
 const blockedDomainsTextarea = document.getElementById("blocked-domains");
 const saveButton = document.getElementById("save-btn");
 const statusDiv = document.getElementById("status");
-const togglePasswordBtn = document.querySelector(".toggle-password");
-const versionSpan = document.getElementById("version");
 
-const manifest = chrome.runtime.getManifest();
-versionSpan.textContent = `v${manifest.version}`;
+const { config, models } = await loadConfig();
+const apiKeyInputs = {};
 
-chrome.storage.sync.get(["openaiApiKey", "openaiModel", "theme", "keepTextOnClose", "enableContentScript", "debugMode", "blockedDomains"], (result) => {
-  if (result.openaiApiKey) {
-    apiKeyInput.value = result.openaiApiKey;
-  }
-  if (result.openaiModel) {
-    modelSelect.value = result.openaiModel;
-  } else {
-    modelSelect.value = "gpt-5-nano-2025-08-07";
-  }
-  if (result.theme) {
-    themeSelect.value = result.theme;
-    document.documentElement.setAttribute("data-theme", result.theme);
-  } else {
-    themeSelect.value = "system";
-    document.documentElement.setAttribute("data-theme", "system");
-  }
-  if (result.keepTextOnClose !== undefined) {
-    keepTextCheckbox.checked = result.keepTextOnClose;
-  } else {
-    keepTextCheckbox.checked = true;
-  }
-  if (result.enableContentScript !== undefined) {
-    contentScriptCheckbox.checked = result.enableContentScript;
-  } else {
-    contentScriptCheckbox.checked = true;
-  }
-  if (result.debugMode !== undefined) {
-    debugModeCheckbox.checked = result.debugMode;
-  } else {
-    debugModeCheckbox.checked = false;
-  }
-  if (result.blockedDomains) {
-    blockedDomainsTextarea.value = result.blockedDomains;
-  }
-});
+document.getElementById("version").textContent = `v${chrome.runtime.getManifest().version}`;
 
-function validateDomains(domainsString) {
-  if (!domainsString.trim()) return { valid: true, domains: [] };
-  
-  const domains = domainsString.split(",").map(d => d.trim()).filter(d => d);
-  const validDomains = [];
-  const errors = [];
-  
-  domains.forEach(domain => {
-    if (domain.includes("://")) {
-      errors.push(`"${domain}" - Remove protocol (http:// or https://)`);
-      return;
+function renderModelOptions() {
+  for (const [providerId, provider] of Object.entries(config.providers)) {
+    const group = document.createElement("optgroup");
+    group.label = provider.name;
+    for (const model of models.models.filter((m) => m.provider === providerId)) {
+      group.append(new Option(model.id === models.defaultModel ? `${model.name} (Recommended)` : model.name, model.id));
     }
-    
-    if (domain.match(/^[a-zA-Z0-9]([a-zA-Z0-9\-\.\/:]*[a-zA-Z0-9\/])?$/)) {
-      validDomains.push(domain);
-    } else {
-      errors.push(`"${domain}" - Invalid domain format`);
-    }
-  });
-  
-  return { valid: errors.length === 0, domains: validDomains, errors };
+    modelSelect.append(group);
+  }
 }
 
-saveButton.addEventListener("click", () => {
-  const apiKey = apiKeyInput.value.trim();
-  const model = modelSelect.value;
-  const theme = themeSelect.value;
-  const keepTextOnClose = keepTextCheckbox.checked;
-  const enableContentScript = contentScriptCheckbox.checked;
-  const debugMode = debugModeCheckbox.checked;
-  const blockedDomainsString = blockedDomainsTextarea.value.trim();
+function renderApiKeyFields() {
+  for (const [providerId, provider] of Object.entries(config.providers)) {
+    const group = document.createElement("div");
+    group.className = "form-group";
 
-  if (!apiKey) {
-    showStatus("Please enter an API key", "error");
-    return;
+    const label = document.createElement("label");
+    label.htmlFor = `api-key-${providerId}`;
+    label.textContent = `${provider.name} API Key`;
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "input-wrapper";
+    const input = document.createElement("input");
+    input.type = "password";
+    input.id = `api-key-${providerId}`;
+    input.placeholder = `${provider.keyPrefix}...`;
+    input.autocomplete = "off";
+    const toggle = document.createElement("button");
+    toggle.type = "button";
+    toggle.className = "toggle-password";
+    toggle.title = toggle.ariaLabel = "Toggle key visibility";
+    toggle.innerHTML = '<span class="material-icons" aria-hidden="true">visibility_off</span>';
+    toggle.addEventListener("click", () => {
+      input.type = input.type === "password" ? "text" : "password";
+      toggle.firstChild.textContent = input.type === "password" ? "visibility_off" : "visibility";
+    });
+    wrapper.append(input, toggle);
+
+    const help = document.createElement("p");
+    help.className = "help-text";
+    const link = document.createElement("a");
+    link.href = provider.keyUrl;
+    link.target = "_blank";
+    link.rel = "noopener";
+    link.textContent = "Get a key";
+    help.append(link, " · Stored only on this device.");
+
+    group.append(label, wrapper, help);
+    apiKeysContainer.append(group);
+    apiKeyInputs[providerId] = input;
   }
+}
 
-  if (!apiKey.startsWith("sk-") || apiKey.length < 20) {
-    showStatus('Invalid API key format. It should start with "sk-" and be at least 20 characters long.', "error");
-    return;
+function selectedModel() {
+  return models.models.find((m) => m.id === modelSelect.value);
+}
+
+function updateModelHelp() {
+  const model = selectedModel();
+  modelHelp.textContent = [model.note, formatPrice(model.pricing)].filter(Boolean).join(" · ");
+  for (const [providerId, input] of Object.entries(apiKeyInputs)) {
+    input.required = providerId === model.provider;
   }
+}
 
-  const domainValidation = validateDomains(blockedDomainsString);
-  if (!domainValidation.valid) {
-    showStatus("Invalid domain format: " + domainValidation.errors.join(", "), "error");
-    return;
-  }
-
-  const settingsToSave = {
-    openaiApiKey: apiKey,
-    openaiModel: model,
-    theme: theme,
-    keepTextOnClose: keepTextOnClose,
-    enableContentScript: enableContentScript,
-    debugMode: debugMode,
-    blockedDomains: blockedDomainsString,
-  };
-
-  if (!keepTextOnClose) {
-    settingsToSave.persistedInputText = "";
-    settingsToSave.persistedOutputText = "";
-  }
-
-  chrome.storage.sync.set(settingsToSave, () => {
-    if (chrome.runtime.lastError) {
-      showStatus("Error saving settings: " + chrome.runtime.lastError.message, "error");
-    } else {
-      showStatus("Settings saved successfully!", "success");
-      document.documentElement.setAttribute("data-theme", theme);
-    }
-  });
-});
-
-themeSelect.addEventListener("change", (e) => {
-  document.documentElement.setAttribute("data-theme", e.target.value);
-});
-
-togglePasswordBtn.addEventListener("click", () => {
-  const type = apiKeyInput.type === "password" ? "text" : "password";
-  const icon = type === "password" ? "visibility_off" : "visibility";
-
-  apiKeyInput.type = type;
-  togglePasswordBtn.querySelector(".material-icons").textContent = icon;
-});
+function validateDomains(domainsString) {
+  const errors = domainsString
+    .split(",")
+    .map((d) => d.trim())
+    .filter(Boolean)
+    .flatMap((domain) => {
+      if (domain.includes("://")) return [`"${domain}" - Remove protocol (http:// or https://)`];
+      if (!/^[a-zA-Z0-9]([a-zA-Z0-9\-./:]*[a-zA-Z0-9/])?$/.test(domain)) return [`"${domain}" - Invalid domain format`];
+      return [];
+    });
+  return errors;
+}
 
 function showStatus(message, type) {
   statusDiv.textContent = message;
   statusDiv.className = `status ${type}`;
-
-  setTimeout(() => {
-    statusDiv.className = "status";
-  }, 3000);
+  setTimeout(() => (statusDiv.className = "status"), 3000);
 }
+
+async function loadSettings() {
+  const [settings, apiKeys] = await Promise.all([
+    chrome.storage.sync.get(["model", "theme", "keepTextOnClose", "enableContentScript", "debugMode", "blockedDomains"]),
+    getApiKeys(),
+  ]);
+  const { defaults } = config;
+
+  modelSelect.value = models.models.some((m) => m.id === settings.model) ? settings.model : models.defaultModel;
+  themeSelect.value = settings.theme ?? defaults.theme;
+  keepTextCheckbox.checked = settings.keepTextOnClose ?? defaults.keepTextOnClose;
+  contentScriptCheckbox.checked = settings.enableContentScript ?? defaults.enableContentScript;
+  debugModeCheckbox.checked = settings.debugMode ?? defaults.debugMode;
+  blockedDomainsTextarea.value = settings.blockedDomains ?? "";
+  for (const [providerId, input] of Object.entries(apiKeyInputs)) input.value = apiKeys[providerId] ?? "";
+
+  applyTheme(themeSelect.value);
+  updateModelHelp();
+}
+
+async function saveSettings() {
+  const model = selectedModel();
+  const apiKeys = {};
+
+  for (const [providerId, input] of Object.entries(apiKeyInputs)) {
+    const key = input.value.trim();
+    const provider = config.providers[providerId];
+    if (!key) continue;
+    if (!key.startsWith(provider.keyPrefix) || key.length < 20) {
+      showStatus(`Invalid ${provider.name} API key. It should start with "${provider.keyPrefix}".`, "error");
+      return;
+    }
+    apiKeys[providerId] = key;
+  }
+
+  if (!apiKeys[model.provider]) {
+    showStatus(`${model.name} needs a ${config.providers[model.provider].name} API key.`, "error");
+    return;
+  }
+
+  const blockedDomains = blockedDomainsTextarea.value.trim();
+  const domainErrors = validateDomains(blockedDomains);
+  if (domainErrors.length) {
+    showStatus(`Invalid domain format: ${domainErrors.join(", ")}`, "error");
+    return;
+  }
+
+  try {
+    await Promise.all([
+      chrome.storage.local.set({ apiKeys }),
+      chrome.storage.sync.set({
+        model: model.id,
+        theme: themeSelect.value,
+        keepTextOnClose: keepTextCheckbox.checked,
+        enableContentScript: contentScriptCheckbox.checked,
+        debugMode: debugModeCheckbox.checked,
+        blockedDomains,
+      }),
+      keepTextCheckbox.checked || chrome.storage.local.remove(["persistedInputText", "persistedOutputText"]),
+    ]);
+    showStatus("Settings saved successfully!", "success");
+  } catch (error) {
+    showStatus(`Error saving settings: ${error.message}`, "error");
+  }
+}
+
+renderModelOptions();
+renderApiKeyFields();
+modelSelect.addEventListener("change", updateModelHelp);
+themeSelect.addEventListener("change", () => applyTheme(themeSelect.value));
+saveButton.addEventListener("click", saveSettings);
+loadSettings();

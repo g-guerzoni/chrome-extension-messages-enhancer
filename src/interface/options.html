@@ -13,28 +13,12 @@
         <h1>AI Message Enhancer Settings <span id="version" class="version-text"></span></h1>
 
         <div class="form-group">
-        <label for="api-key">OpenAI API Key</label>
-        <div class="input-wrapper">
-            <input 
-                type="password" 
-                id="api-key" 
-                placeholder="Enter your OpenAI API key"
-                autocomplete="off"
-            >
-            <button type="button" class="toggle-password" aria-label="Toggle password visibility" title="Toggle password visibility">
-                <span class="material-icons" aria-hidden="true">visibility_off</span>
-            </button>
+            <label for="model">Model</label>
+            <select id="model"></select>
+            <p id="model-help" class="help-text"></p>
         </div>
-    </div>
 
-    <div class="form-group">
-        <label for="model">OpenAI Model</label>
-        <select id="model">
-            <option value="gpt-5-nano-2025-08-07">GPT 5 Nano (Default)</option>
-            <option value="gpt-4.1-nano-2025-04-14">GPT 4.1 Nano</option>
-        </select>
-        <p class="help-text">Choose which OpenAI model to use for text enhancement. GPT 5 Nano is recommended for most users.</p>
-    </div>
+        <div id="api-keys"></div>
 
     <div class="form-group">
         <label for="theme">Theme</label>
@@ -60,7 +44,7 @@
             <span class="checkmark"></span>
             Show enhancement icons on websites
         </label>
-        <p class="help-text">When enabled, ✨ icons will appear in text inputs on websites like Gmail, Slack, Teams, etc. Click the icon to open the extension with your text pre-filled.</p>
+        <p class="help-text">When enabled, a ✨ icon appears in text fields on websites like Gmail, Slack and Teams. Click it to enhance the text in place (or only the selected part), with an Undo option. The keyboard shortcut and the right-click menu work even when the icon is hidden. Change the shortcut (default Alt+Shift+E) at chrome://extensions/shortcuts.</p>
     </div>
 
     <div class="form-group">
@@ -69,7 +53,7 @@
             <span class="checkmark"></span>
             Enable debug logging
         </label>
-        <p class="help-text">When enabled, debug information will be logged to the browser console. Disable for better performance in production.</p>
+        <p class="help-text">When enabled, request timings are logged to the extension's service worker console.</p>
     </div>
 
     <div class="form-group">
@@ -79,7 +63,7 @@
             placeholder="Enter domains to block, separated by commas (e.g., github.com, twitter.com/compose, facebook.com)"
             rows="3"
         ></textarea>
-        <p class="help-text">Enhancement icons will be hidden on these domains. Use full domains (github.com) to block entire sites, include paths (github.com/user/repo) to block specific pages, or specify ports (localhost:3000) for local development.</p>
+        <p class="help-text">The ✨ icon will be hidden on these domains. Use full domains (github.com) to block entire sites, include paths (github.com/user/repo) to block specific pages, or specify ports (localhost:3000) for local development.</p>
     </div>
 
         <button id="save-btn" aria-label="Save all settings">Save Settings</button>

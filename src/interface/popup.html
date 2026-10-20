@@ -27,12 +27,11 @@
           </div>
           <textarea
             id="input-text"
-            placeholder="Enter your message here (max 10000 characters)"
-            maxlength="10000"
+            placeholder="Enter your message here"
             aria-describedby="char-count-display"
           ></textarea>
           <div id="char-count-display" class="char-count" aria-live="polite" aria-atomic="true">
-            <span id="char-count">0</span>/10000 characters
+            <span id="char-count">0</span>/<span id="char-limit"></span> characters
           </div>
         </div>
 
@@ -74,6 +73,8 @@
           </fieldset>
         </div>
 
+        <div id="error-message" class="error-message" role="alert"></div>
+
         <button id="enhance-btn" class="primary-button" aria-label="Enhance message">
           <span class="button-text">Enhance Message (press Enter)</span>
           <div class="loading-spinner" role="status" aria-label="Processing"></div>
@@ -82,17 +83,14 @@
         <div class="output-section" role="region" aria-label="Enhanced text output">
           <div class="output-header">
             <label for="output-text">Enhanced Text</label>
-            <div class="button-group">
-              <button id="copy-btn" class="icon-button" aria-label="Copy enhanced text to clipboard" title="Copy to Clipboard">
-                <span class="material-icons" aria-hidden="true">content_copy</span>
-              </button>
-              <button id="replace-btn" class="icon-button replace-btn" aria-label="Replace original text with enhanced version" title="Replace Input with Enhanced Text">
-                <span class="material-icons" aria-hidden="true">forward</span>
-              </button>
-            </div>
+            <button id="copy-btn" class="icon-button" aria-label="Copy enhanced text to clipboard" title="Copy to Clipboard">
+              <span class="material-icons" aria-hidden="true">content_copy</span>
+            </button>
           </div>
-          <textarea id="output-text" readonly aria-live="polite"></textarea>
+          <textarea id="output-text" readonly></textarea>
         </div>
+
+        <p class="hint">Model: <span id="model-name"></span><span id="shortcut-hint"></span></p>
 
         <div id="status-announcer" role="status" aria-live="polite" aria-atomic="true" class="sr-only"></div>
       </main>
