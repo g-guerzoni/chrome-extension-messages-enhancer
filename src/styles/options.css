@@ -48,6 +48,7 @@ textarea {
     background-color: var(--input-background);
     color: var(--text-color);
     font-family: inherit;
+    box-sizing: border-box;
 }
 
 textarea {
@@ -134,6 +135,10 @@ button:hover {
     color: var(--error-color);
 }
 
+.help-text a {
+    color: var(--primary-color);
+}
+
 .help-text {
     margin-top: 0.25rem;
     font-size: 0.75rem;
@@ -142,6 +147,7 @@ button:hover {
 }
 
 .checkbox-label {
+    position: relative;
     display: flex;
     align-items: flex-start;
     cursor: pointer;
@@ -149,8 +155,17 @@ button:hover {
     margin-bottom: 0;
 }
 
+/* Visually hidden but still focusable, so the setting stays keyboard accessible. */
 .checkbox-label input[type="checkbox"] {
-    display: none;
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+}
+
+.checkbox-label input[type="checkbox"]:focus-visible + .checkmark {
+    outline: 3px solid var(--primary-color);
+    outline-offset: 2px;
 }
 
 .checkmark {
