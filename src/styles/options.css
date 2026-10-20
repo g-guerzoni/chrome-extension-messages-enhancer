@@ -96,8 +96,9 @@ button:focus-visible {
     color: var(--text-color);
 }
 
-.toggle-password .material-icons {
-    font-size: 1.125rem;
+.toggle-password .icon {
+    width: 1.125rem;
+    height: 1.125rem;
 }
 
 button {

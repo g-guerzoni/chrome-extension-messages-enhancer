@@ -1,4 +1,4 @@
-import { loadConfig, getApiKeys, formatPrice, applyTheme } from "./shared.js";
+import { loadConfig, getApiKeys, formatPrice, applyTheme, setIcon } from "./shared.js";
 
 const modelSelect = document.getElementById("model");
 const modelHelp = document.getElementById("model-help");
@@ -54,13 +54,13 @@ function renderApiKeyFields() {
     toggle.className = "toggle-password";
     toggle.title = "Show key";
     toggle.setAttribute("aria-pressed", "false");
-    toggle.innerHTML = '<span class="material-icons" aria-hidden="true">visibility_off</span>';
+    toggle.innerHTML = '<svg class="icon" aria-hidden="true"><use href="icons.svg#visibility_off"/></svg>';
     toggle.addEventListener("click", () => {
       const hidden = input.type === "text";
       input.type = hidden ? "password" : "text";
       toggle.title = hidden ? "Show key" : "Hide key";
       toggle.setAttribute("aria-pressed", String(!hidden));
-      toggle.firstChild.textContent = hidden ? "visibility_off" : "visibility";
+      setIcon(toggle, hidden ? "visibility_off" : "visibility");
     });
     input.addEventListener("input", () => input.removeAttribute("aria-invalid"));
     wrapper.append(input, toggle);

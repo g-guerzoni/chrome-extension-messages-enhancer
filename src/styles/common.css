@@ -46,3 +46,10 @@
     --link-color: #818cf8;
     --input-background: #111827;
 }
+
+/* Inline SVG icons from src/interface/icons.svg */
+.icon {
+    display: block;
+    flex: none;
+    fill: currentColor;
+}
