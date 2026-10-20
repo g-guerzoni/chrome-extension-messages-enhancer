@@ -101,7 +101,7 @@ A Chrome extension that enhances, corrects, and beautifies your text using fast,
 
 ### API Configuration
 - **Model**: choose from a short list of fast, low-cost models (see below)
-- **Data notice**: shown on install and on upgrade from v2. Nothing is sent to an AI provider until you accept it, and you can withdraw consent at any time in settings
+- **Data notice**: shown on install and on upgrade from v2. Nothing is sent to an AI provider until you press OK
 - **API keys**: an OpenRouter key (`sk-or-...`) for the OpenRouter models, or an OpenAI key for the OpenAI models
 - API keys and the selected model are stored in Chrome's local storage on this device only (not synced to your Google account)
 - Your API key is only sent to the provider of the selected model

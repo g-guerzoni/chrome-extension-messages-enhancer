@@ -143,17 +143,12 @@ async function renderConsent() {
   dataNotice.classList.toggle("pending", !accepted);
   consentStatus.textContent = accepted
     ? `You accepted this on ${new Date(dataConsent.at).toLocaleDateString()}.`
-    : "The extension sends nothing until you agree.";
-  consentButton.textContent = accepted ? "Withdraw consent" : "I agree";
-  consentButton.className = accepted ? "secondary-button" : "";
+    : "The extension sends nothing until you press OK.";
+  consentButton.hidden = accepted;
 }
 
-async function toggleConsent() {
-  if (consentButton.textContent === "I agree") {
-    await chrome.storage.local.set({ dataConsent: { version: DATA_CONSENT_VERSION, at: Date.now() } });
-  } else {
-    await chrome.storage.local.remove("dataConsent");
-  }
+async function acceptConsent() {
+  await chrome.storage.local.set({ dataConsent: { version: DATA_CONSENT_VERSION, at: Date.now() } });
   renderConsent();
 }
 
@@ -238,7 +233,7 @@ renderApiKeyFields();
 modelSelect.addEventListener("change", updateModelHelp);
 themeSelect.addEventListener("change", () => applyTheme(themeSelect.value));
 saveButton.addEventListener("click", saveSettings);
-consentButton.addEventListener("click", toggleConsent);
+consentButton.addEventListener("click", acceptConsent);
 // Extension pages may open chrome:// URLs through the tabs API, not through links.
 document.getElementById("change-shortcut").addEventListener("click", () => chrome.tabs.create({ url: "chrome://extensions/shortcuts" }));
 chrome.commands.getAll().then((commands) => {
