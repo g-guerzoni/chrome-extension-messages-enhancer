@@ -9,7 +9,8 @@ This directory holds the extension's configuration, so models, prompts and limit
 | `instructions.json` | `background.js` | The system prompt used for every enhancement |
 
 Content scripts cannot read these files directly (they are not web-accessible). `content.js` asks the
-service worker for the values it needs with the `getContentConfig` message.
+service worker with the `getContentConfig` message, on the first focus of a text field. The answer
+also carries the user's settings, the model name and the current keyboard shortcut.
 
 ## config.json
 
@@ -30,7 +31,12 @@ service worker for the values it needs with the `getContentConfig` message.
   "defaults": { "theme": "system", "prefs": { "tone": "neutral", "type": "message", "translate": false } },
   "contentScript": {
     "blockedHostKeywords": ["bank", "paypal"],
-    "blockedHostLabels": ["secure", "login", "signin", "auth", "accounts", "admin"]
+    "blockedHostLabels": ["secure", "login", "signin", "auth", "accounts", "admin"],
+    "minField": { "width": 160, "height": 18 },
+    "searchPattern": "search|filter|find|pesquis|busca",
+    "sensitivePattern": "password|passwd|...|api.?key",
+    "excludedContent": ".gmail_signature, .gmail_quote, ...",
+    "sites": [{ "hosts": ["mail.google.com"], "type": "email" }]
   }
 }
 ```
@@ -39,8 +45,16 @@ service worker for the values it needs with the `getContentConfig` message.
   `headers` and `params` are added to every request sent to that provider. The settings page renders
   one API key field per provider.
 - **limits.maxCharacters**: maximum input length (popup, in-page enhancement and service worker).
-- **contentScript**: the ✨ icon is hidden on hosts that contain a keyword (`mybank.com`) or have a
-  matching label (`login.example.com`, `secure-pay.example.com`).
+- **contentScript**: rules for the in-page ✨ Enhance button.
+  - The button is hidden on hosts that contain a keyword (`mybank.com`) or have a matching label
+    (`login.example.com`, `secure-pay.example.com`).
+  - `minField`: fields smaller than this get no button (the shortcut and menu still work).
+  - `searchPattern` and `sensitivePattern`: case-insensitive regular expressions matched against a
+    field's name, id, autocomplete, aria-label and placeholder. Search-like fields get no button;
+    sensitive ones are never enhanced.
+  - `excludedContent`: mail signatures and quoted replies that are never sent or rewritten.
+  - `sites`: per-site profiles. `type` is the default message type there, and these hosts are the
+    ones used by the "Only on Slack, Teams, Gmail and Outlook" setting.
 
 ## model.json
 
