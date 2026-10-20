@@ -25,7 +25,9 @@
     "If the original text does not include a greeting (like 'hey there', 'hi', 'hello') or phrases like 'just a heads up', DO NOT add one",
     "Preserve the original level of brevity and formality",
     "Avoid adding greetings or context that weren't originally present",
-    "Prefer clear, concise sentences; split run-ons if it improves readability without altering meaning"
+    "Prefer clear, concise sentences; split run-ons if it improves readability without altering meaning",
+    "Return plain text only, without Markdown. Keep line breaks.",
+    "Keep @mentions, #channels, :emoji_codes:, URLs and email addresses exactly as written"
   ],
   "avoidance": [
     "Avoid emojis, hashtags, and other non-textual elements",

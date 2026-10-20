@@ -7,7 +7,7 @@ const CONTENT_SCRIPT = "src/scripts/content.js";
 chrome.contextMenus.removeAll(() => {
   chrome.contextMenus.create({
     id: CONTEXT_MENU_ID,
-    title: "Enhance with AI Message Enhancer",
+    title: "Enhance with AI Message Enhancer…",
     contexts: ["editable"],
   });
 });
@@ -24,7 +24,16 @@ chrome.runtime.onInstalled.addListener(async ({ reason, previousVersion }) => {
 
 // v3 moved secrets and message text out of sync storage and introduced multiple providers.
 async function migrateStorage() {
-  const legacy = await chrome.storage.sync.get(["openaiApiKey", "openaiModel", "translateEnabled", "persistedInputText", "persistedOutputText", "prefs"]);
+  const legacy = await chrome.storage.sync.get([
+    "openaiApiKey",
+    "openaiModel",
+    "translateEnabled",
+    "persistedInputText",
+    "persistedOutputText",
+    "prefs",
+    "enableContentScript",
+    "inPageTrigger",
+  ]);
   const current = await chrome.storage.local.get(["apiKeys", "model"]);
   const { models } = await loadConfig();
   const local = {};
@@ -38,6 +47,10 @@ async function migrateStorage() {
       local.model = known ? legacy.openaiModel : models.legacyDefaultModel;
     }
   }
+  // v3.1 replaced the on/off icon setting with a three-way trigger; respect an explicit "off".
+  if (legacy.enableContentScript === false && !legacy.inPageTrigger) {
+    await chrome.storage.sync.set({ inPageTrigger: "off" });
+  }
   if (legacy.translateEnabled !== undefined && !legacy.prefs) {
     await chrome.storage.sync.set({ prefs: { translate: legacy.translateEnabled } });
   }
@@ -49,7 +62,7 @@ async function migrateStorage() {
   await chrome.storage.local.set(local);
   // v2 leftovers: page text handed to the popup, and synced message text.
   await chrome.storage.local.remove(["pendingText", "pendingTimestamp", "autoEnhance", "fromWebsite"]);
-  await chrome.storage.sync.remove(["translateEnabled", "persistedInputText", "persistedOutputText"]);
+  await chrome.storage.sync.remove(["translateEnabled", "persistedInputText", "persistedOutputText", "enableContentScript"]);
 }
 
 async function debug(...args) {
@@ -74,14 +87,33 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
 
   if (request.action === "getContentConfig") {
-    loadConfig().then(({ config }) => sendResponse({ ...config.contentScript, maxCharacters: config.limits.maxCharacters }));
+    getContentConfig().then(sendResponse);
     return true;
   }
 });
 
-// The popup streams through a port so it can render partial output and cancel by closing.
+async function getContentConfig() {
+  const [{ config }, prefs, model, settings, commands] = await Promise.all([
+    loadConfig(),
+    getPrefs(),
+    getActiveModel(),
+    chrome.storage.sync.get(["inPageTrigger", "blockedDomains"]),
+    chrome.commands.getAll(),
+  ]);
+  return {
+    ...config.contentScript,
+    prefs,
+    modelName: model.name,
+    inPageTrigger: settings.inPageTrigger ?? config.defaults.inPageTrigger,
+    blockedDomains: settings.blockedDomains ?? "",
+    shortcut: commands.find((c) => c.name === "enhance-field")?.shortcut ?? "",
+  };
+}
+
+// The popup and the in-page popover stream through a port so they can render partial output
+// and cancel by disconnecting.
 chrome.runtime.onConnect.addListener((port) => {
-  if (port.name !== "enhance") return;
+  if (port.name !== "enhance" || port.sender?.id !== chrome.runtime.id) return;
 
   const controller = new AbortController();
   port.onDisconnect.addListener(() => controller.abort());
@@ -108,7 +140,7 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
 // Tabs opened before the extension was installed or updated have no content script yet,
 // so inject it on demand. The shortcut and the menu click grant activeTab for this.
 async function enhanceInTab(tabId, frameId) {
-  const message = { action: "enhanceActiveField" };
+  const message = { action: "openEnhancer" };
   const options = frameId === undefined ? {} : { frameId };
   try {
     await chrome.tabs.sendMessage(tabId, message, options);
