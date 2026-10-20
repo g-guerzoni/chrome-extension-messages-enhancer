@@ -524,6 +524,9 @@
     });
 
     ui = { host, root, pill, chip, notice, popover };
+    // The popover hangs above the field by its bottom edge, so it must move whenever its height
+    // changes (status line, warnings, errors), not only when the text streams in.
+    new ResizeObserver(() => positionPopover()).observe(popover.root);
     return ui;
   }
 
