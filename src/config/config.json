@@ -10,7 +10,9 @@
         "X-Title": "AI Message Enhancer"
       },
       "params": {
-        "provider": { "sort": "latency" }
+        "provider": {
+          "sort": "latency"
+        }
       }
     },
     "openai": {
@@ -30,7 +32,7 @@
   "defaults": {
     "theme": "system",
     "keepTextOnClose": true,
-    "enableContentScript": true,
+    "inPageTrigger": "multiline",
     "debugMode": false,
     "prefs": {
       "tone": "neutral",
@@ -39,7 +41,54 @@
     }
   },
   "contentScript": {
-    "blockedHostKeywords": ["bank", "paypal"],
-    "blockedHostLabels": ["secure", "login", "signin", "auth", "accounts", "admin"]
+    "blockedHostKeywords": [
+      "bank",
+      "paypal"
+    ],
+    "blockedHostLabels": [
+      "secure",
+      "login",
+      "signin",
+      "auth",
+      "accounts",
+      "admin"
+    ],
+    "minField": {
+      "width": 160,
+      "height": 18
+    },
+    "searchPattern": "search|filter|find|pesquis|busca",
+    "sensitivePattern": "password|passwd|passcode|passphrase|\\bpwd\\b|\\botp\\b|one.?time|\\b2fa\\b|\\bmfa\\b|totp|\\bpin\\b|\\bcvv|\\bcvc\\b|\\bcsc\\b|card.?num|\\bcc-|\\biban\\b|\\bssn\\b|secret|api.?key|access.?token|auth.?token",
+    "excludedContent": ".gmail_signature, .gmail_quote, .gmail_extra, [data-smartmail=\"gmail_signature\"], #divRplyFwdMsg, #Signature, #appendonsend, .moz-signature, .ck-fake-selection-container",
+    "sites": [
+      {
+        "hosts": [
+          "mail.google.com"
+        ],
+        "type": "email"
+      },
+      {
+        "hosts": [
+          "outlook.office.com",
+          "outlook.office365.com",
+          "outlook.live.com"
+        ],
+        "type": "email"
+      },
+      {
+        "hosts": [
+          "app.slack.com"
+        ],
+        "type": "message"
+      },
+      {
+        "hosts": [
+          "teams.microsoft.com",
+          "teams.live.com",
+          "teams.cloud.microsoft"
+        ],
+        "type": "message"
+      }
+    ]
   }
 }
